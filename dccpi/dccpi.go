@@ -126,6 +126,14 @@ Usage: exit
 
 This command quits dccpi. Tracks are powered off before exiting.
 `},
+	"ui": {
+		Name:      "ui",
+		ShortDesc: "Launch UI server",
+		LongDesc: `
+	Usage: ui
+
+	This command will launch UI server to control it with an external device.
+`},
 }
 
 // DefaultConfigPath specifies where to read the configuration from
@@ -408,6 +416,8 @@ func (r *repl) run() {
 				break
 			}
 			fmt.Println("Configuration saved to", configFlag)
+		case "ui":
+			dcc.Serve()
 		default:
 			l, ok := r.ctrl.GetLoco(cmd)
 			if !ok {
