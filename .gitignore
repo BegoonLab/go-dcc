@@ -24,3 +24,5 @@ _testmain.go
 *.exe
 *.test
 *.prof
+.vscode/*
+frontend/node_modules/*
