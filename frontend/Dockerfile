@@ -3,4 +3,4 @@ USER node
 WORKDIR /var/www/app
 COPY package*.json ./
 EXPOSE 8080
-CMD [ "node", "server.js" ]
+CMD [ "npm run dev" ]

@@ -1,15 +1,5 @@
 version: '3.9'
 services:
-  # nodejs-server:
-  #   build: ./ci
-  #   ports:
-  #     - "3080:3080"
-  #   container_name: node-api
-  #   working_dir: /usr/src/app
-  #   user: node
-  #   volumes:
-  #      - ./frontend:/usr/src/app
-  #      - ./public:/usr/src/build
   vue-ui:
     build: 
       context: ./frontend
@@ -21,4 +11,4 @@ services:
     volumes:
        - ./frontend:/var/www/app
        - ./public:/var/www/build
-    command: "npm start"
+    command: "npm run dev"
