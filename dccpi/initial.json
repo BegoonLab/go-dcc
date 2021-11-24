@@ -1,0 +1,21 @@
+{
+    "locomotives": [
+        {
+            "name": "loco1",
+            "address": 6
+        },
+        {
+            "name": "loco2",
+            "address": 7,
+            "fl": true
+        },
+        {
+            "name": "DCCThing",
+            "address": 8,
+            "f1": true,
+            "f2": true,
+            "f3": true,
+            "f4": false
+        }
+    ]
+}

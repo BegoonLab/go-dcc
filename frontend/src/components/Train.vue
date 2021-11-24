@@ -1,7 +1,8 @@
 <template>
   <div class="px-2">
-    <v-row >
-      <v-col>
+    <v-row>
+      <v-col cols="8">
+        <h3>Address: {{ locomotive.address }}</h3>
         <v-switch
           v-model="dir"
           :label="`Direction: ${dir}`"
@@ -16,21 +17,23 @@
           :false-value="'Off'"
         ></v-switch>
       </v-col>
-      <v-col class="text-right">
-        <h3>Speed: {{ speed }}</h3>
+      <v-col cols="4" class="text-center">
+        <h3>Speed: {{ locomotive.speed }}</h3>
         <v-slider
-          justify-end
+          justify-center
           vertical
           hint="Im a hint"
+          height="270"
           max="255"
           min="0"
-          v-model="speed"
+          :value="locomotive.speed"
+          @end="v => update(v, 'speed')"
         ></v-slider>
         <v-btn
-          :disabled="speed == 0"
+          :disabled="locomotive.speed == 0"
           depressed
           color="error"
-          @click="() => {speed = 0}"
+          @click="() => {update(0, 'speed')}"
         >
           STOP
         </v-btn>
@@ -38,7 +41,7 @@
     </v-row>
     <v-row>
       <v-col>
-        <v-checkbox v-model="f1" :label="`F1`"></v-checkbox>
+        <v-checkbox v-model="f1" :label="`F1`" class="align-center justify-center"></v-checkbox>
         <v-checkbox v-model="f2" :label="`F2`"></v-checkbox>
         <v-checkbox v-model="f3" :label="`F3`"></v-checkbox>
         <v-checkbox v-model="f4" :label="`F4`"></v-checkbox>
@@ -69,10 +72,18 @@
 </template>
 
 <script>
+import { mapGetters, mapState } from "vuex";
 export default {
+  props: ["name"],
+  computed: {
+    ...mapState({
+      locomotive: function (state) {
+        return state.controller.locomotives[this.name];
+      },
+    }),
+  },
   data() {
     return {
-      speed: 0,
       dir: "Forward",
       light: "Off",
       f1: false,
@@ -97,6 +108,12 @@ export default {
       f20: false,
       f21: false,
     };
+  },
+  methods: {
+    update(value, where) {
+      
+      this.$store.dispatch("controller/setLocomotiveState", {name: this.name, value: value, where: where});
+    },
   },
 };
 </script>

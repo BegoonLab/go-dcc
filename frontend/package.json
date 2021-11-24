@@ -16,6 +16,7 @@
         "mini-css-extract-plugin": "^2.4.5",
         "vue-router": "^3.5.3",
         "vuetify": "^2.6.0",
+        "vuex": "^3.6.2",
         "webpack-hot-middleware": "^2.25.1"
     },
     "devDependencies": {

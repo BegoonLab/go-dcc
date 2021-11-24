@@ -138,7 +138,7 @@ This command quits dccpi. Tracks are powered off before exiting.
 
 // DefaultConfigPath specifies where to read the configuration from
 // if no alternative is provided. init() sets it it to ~/.dccpi
-var DefaultConfigPath = ""
+var DefaultConfigPath = "./initial.json"
 
 // The dccpi line prompt
 const Prompt = "dccpi> "
@@ -417,7 +417,7 @@ func (r *repl) run() {
 			}
 			fmt.Println("Configuration saved to", configFlag)
 		case "ui":
-			dcc.Serve()
+			dcc.Serve(r.ctrl)
 		default:
 			l, ok := r.ctrl.GetLoco(cmd)
 			if !ok {

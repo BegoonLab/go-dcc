@@ -14,6 +14,7 @@
               <v-btn
                 depressed
                 color="error"
+                @click="() => {newMessage = 'First Message'; sendMessage();}"
               >
                 STOP ALL
               </v-btn>
@@ -22,21 +23,21 @@
                 <v-tabs v-model="tab" align-with-title>
                   <v-tabs-slider color="yellow"></v-tabs-slider>
 
-                  <v-tab v-for="item in items" :key="item">
-                    {{ item }}
+                  <v-tab v-for="item in locomotives" :key="item.address">
+                    {{ item.name }}
                   </v-tab>
                 </v-tabs>
               </template>
             </v-toolbar>
 
             <v-tabs-items v-model="tab">
-              <v-tab-item v-for="item in items" :key="item">
+              <v-tab-item v-for="item in locomotives" :key="item.address">
                 <v-card flat>
                   <v-card-text v-text="text"></v-card-text>
                 </v-card>
                 <v-row :justify="'center'">
                   <v-col>
-                    <train></train>
+                    <train :name="item.name"></train>
                   </v-col>
                 </v-row>
               </v-tab-item>
@@ -72,18 +73,32 @@
 
 <script>
 import Train from "./Train.vue";
+import { mapGetters, mapState } from 'vuex'
 export default {
   components: { Train },
+
+  computed: {
+    ...mapState({
+      locomotives: state => state.controller.locomotives
+    }),
+  },
+
   data() {
     return {
       message: "Hello World! This is command module",
       tab: null,
-      items: ["Train 1", "Train 2", "Train 3", "Train 4", "Train 5"],
       text: "",
       drawer: false,
       group: null,
     };
   },
+
+  mounted: function() {
+    },
+    methods: {
+      
+
+    }
 };
 </script>
 

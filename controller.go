@@ -1,6 +1,9 @@
 package dcc
 
-import "sync"
+import (
+	"encoding/json"
+	"sync"
+)
 
 // CommandRepeat specifies how many times a single
 // packet is sent.
@@ -26,6 +29,11 @@ type Controller struct {
 	commandCh  chan *Packet
 }
 
+type ControllerJson struct {
+	Locomotives map[string]*Locomotive `json:"locomotives"`
+	Started bool `json:"started"`
+}
+
 // NewController builds a Controller.
 func NewController(d Driver) *Controller {
 	d.TracksOff()
@@ -36,6 +44,17 @@ func NewController(d Driver) *Controller {
 		shutdownCh:  make(chan bool),
 		commandCh:   make(chan *Packet, CommandMaxQueue),
 	}
+}
+
+func (c *Controller) ToJson() []byte {
+	cj := ControllerJson{
+		Locomotives: c.locomotives,
+		Started: c.started,
+	}
+	
+	d, _ := json.Marshal(cj)
+
+	return d
 }
 
 // NewControllerWithConfig builds a new Controller using the
