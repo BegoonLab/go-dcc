@@ -1,33 +1,70 @@
 {
     "locomotives": [
         {
-            "name": "loco1",
-            "address": 6,
-            "direction": 1
+            "name": "GP 38",
+            "address": 38,
+            "direction": 1,
+            "fl": true
         },
         {
-            "name": "loco2",
+            "name": "BR 217",
+            "address": 17,
+            "direction": 1,
+            "fl": true
+        },
+        {
+            "name": "BR 218",
+            "address": 18,
+            "direction": 1,
+            "fl": true
+        },
+        {
+            "name": "BR 280",
+            "address": 2,
+            "direction": 1,
+            "fl": true
+        },
+        {
+            "name": "E 44",
+            "address": 5,
+            "direction": 1,
+            "fl": true
+        },
+        {
+            "name": "Rh 1670",
+            "address": 6,
+            "direction": 1,
+            "fl": true
+        },
+        {
+            "name": "BR 185",
+            "address": 4,
+            "direction": 1,
+            "fl": true
+        },
+        {
+            "name": "BR 55 G7",
             "address": 7,
             "direction": 1,
             "fl": true
         },
         {
-            "name": "Ox Loco",
+            "name": "BR 52",
             "address": 8,
             "direction": 1,
-            "f1": true,
-            "f2": true,
-            "f3": true,
-            "f4": false
+            "fl": true
         },
         {
-            "name": "Alex Loco",
+            "name": "Hondekop",
+            "address": 20,
+            "direction": 1,
+            "fl": true
+        },
+        {
+            "name": "Rh 4744",
             "address": 3,
             "direction": 1,
-            "f1": true,
-            "f2": true,
-            "f3": true,
-            "f4": false
+            "fl": true
         }
     ]
 }
