@@ -1,10 +1,10 @@
 package dcc
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"time"
-	"encoding/json"
 
 	"github.com/gorilla/websocket"
 )
@@ -111,7 +111,7 @@ var (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  4096,
 	WriteBufferSize: 4096,
-	CheckOrigin: func(*http.Request) bool{return true},
+	CheckOrigin:     func(*http.Request) bool { return true },
 }
 
 // Client represents the websocket client at the server
@@ -149,13 +149,37 @@ func (client *Client) readPump() {
 			}
 			break
 		}
-		
+
 		var cj *ControllerJson
 
 		json.Unmarshal(jsonMessage, &cj)
 
 		for _, loco := range ctrl.Locos() {
 			loco.Speed = cj.Locomotives[loco.Name].Speed
+			loco.Direction = cj.Locomotives[loco.Name].Direction
+			loco.Fl = cj.Locomotives[loco.Name].Fl
+			loco.F1 = cj.Locomotives[loco.Name].F1
+			loco.F2 = cj.Locomotives[loco.Name].F2
+			loco.F3 = cj.Locomotives[loco.Name].F3
+			loco.F4 = cj.Locomotives[loco.Name].F4
+			loco.F5 = cj.Locomotives[loco.Name].F5
+			loco.F6 = cj.Locomotives[loco.Name].F6
+			loco.F7 = cj.Locomotives[loco.Name].F7
+			loco.F8 = cj.Locomotives[loco.Name].F8
+			loco.F9 = cj.Locomotives[loco.Name].F9
+			loco.F10 = cj.Locomotives[loco.Name].F10
+			loco.F11 = cj.Locomotives[loco.Name].F11
+			loco.F12 = cj.Locomotives[loco.Name].F12
+			loco.F13 = cj.Locomotives[loco.Name].F13
+			loco.F14 = cj.Locomotives[loco.Name].F14
+			loco.F15 = cj.Locomotives[loco.Name].F15
+			loco.F16 = cj.Locomotives[loco.Name].F16
+			loco.F17 = cj.Locomotives[loco.Name].F17
+			loco.F18 = cj.Locomotives[loco.Name].F18
+			loco.F19 = cj.Locomotives[loco.Name].F19
+			loco.F20 = cj.Locomotives[loco.Name].F20
+			loco.F21 = cj.Locomotives[loco.Name].F21
+
 			loco.Apply()
 		}
 

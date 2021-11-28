@@ -30,6 +30,23 @@ type Locomotive struct {
 	F2        bool      `json:"f2"`
 	F3        bool      `json:"f3"`
 	F4        bool      `json:"f4"`
+	F5        bool      `json:"f5"`
+	F6        bool      `json:"f6"`
+	F7        bool      `json:"f7"`
+	F8        bool      `json:"f8"`
+	F9        bool      `json:"f9"`
+	F10       bool      `json:"f10"`
+	F11       bool      `json:"f11"`
+	F12       bool      `json:"f12"`
+	F13       bool      `json:"f13"`
+	F14       bool      `json:"f14"`
+	F15       bool      `json:"f15"`
+	F16       bool      `json:"f16"`
+	F17       bool      `json:"f17"`
+	F18       bool      `json:"f18"`
+	F19       bool      `json:"f19"`
+	F20       bool      `json:"f20"`
+	F21       bool      `json:"f21"`
 
 	mux sync.Mutex
 

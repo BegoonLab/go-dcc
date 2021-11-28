@@ -42,9 +42,7 @@ const wsHelper = {
 wsHelper.connectToWebsocket();
 
 store.subscribe((mutation, state) => {
-  // console.log(mutation);
-  // console.log(state);
-  if (mutation.type === 'controller/setLocomotive') {
+  if (mutation.type === 'controller/setLocomotive' || mutation.type === 'controller/stopAll') {
     wsHelper.sendMessage(state.controller)
   }
 })

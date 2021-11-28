@@ -1,48 +1,50 @@
 <template>
   <v-app>
-    <v-container fluid class="px-0 py-0">
-      <v-row :justify="'center'">
-        <v-col cols="12" sm="12" md="6" lg="4">
-          <v-card>
-            <v-toolbar color="black" dark flat>
-              <v-app-bar-nav-icon @click="drawer = true"></v-app-bar-nav-icon>
+    <v-card class="overflow-hidden">
+      <v-app-bar app dense fixed dark flat>
+        <v-app-bar-nav-icon @click="drawer = true"></v-app-bar-nav-icon>
 
-              <v-toolbar-title>Train Commander</v-toolbar-title>
+        <v-toolbar-title>Train Commander</v-toolbar-title>
 
-              <v-spacer></v-spacer>
+        <v-spacer></v-spacer>
 
-              <v-btn
-                depressed
-                color="error"
-                @click="() => {newMessage = 'First Message'; sendMessage();}"
-              >
-                STOP ALL
-              </v-btn>
+        <v-btn
+          depressed
+          color="error"
+          @click="
+            () => {
+              stopAll();
+            }
+          "
+        >
+          STOP ALL
+        </v-btn>
 
-              <template v-slot:extension>
-                <v-tabs v-model="tab" align-with-title>
-                  <v-tabs-slider color="yellow"></v-tabs-slider>
+        <template v-slot:extension>
+          <v-tabs v-model="tab" align-with-title>
+            <v-tabs-slider color="yellow"></v-tabs-slider>
 
-                  <v-tab v-for="item in locomotives" :key="item.address">
-                    {{ item.name }}
-                  </v-tab>
-                </v-tabs>
-              </template>
-            </v-toolbar>
-
-            <v-tabs-items v-model="tab">
-              <v-tab-item v-for="item in locomotives" :key="item.address">
-                <v-card flat>
-                  <v-card-text v-text="text"></v-card-text>
-                </v-card>
-                <v-row :justify="'center'">
-                  <v-col>
-                    <train :name="item.name"></train>
-                  </v-col>
-                </v-row>
-              </v-tab-item>
-            </v-tabs-items>
-          </v-card>
+            <v-tab v-for="item in locomotives" :key="item.address">
+              {{ item.name }}
+            </v-tab>
+          </v-tabs>
+        </template>
+      </v-app-bar>
+      <v-sheet
+        id="scrolling-techniques-3"
+        class="overflow-y-auto"
+        height="1000px"
+      >
+        <v-container fluid class="px-0 py-10">
+          <v-tabs-items v-model="tab" class="px-0 py-15">
+            <v-tab-item v-for="item in locomotives" :key="item.address">
+              <v-row :justify="'center'">
+                <v-col md="4" sm="12" xs="12">
+                  <train :name="item.name"></train>
+                </v-col>
+              </v-row>
+            </v-tab-item>
+          </v-tabs-items>
           <v-navigation-drawer v-model="drawer" absolute temporary>
             <v-list nav dense>
               <v-list-item-group
@@ -65,40 +67,38 @@
               </v-list-item-group>
             </v-list>
           </v-navigation-drawer>
-        </v-col>
-      </v-row>
-    </v-container>
+        </v-container>
+      </v-sheet>
+    </v-card>
   </v-app>
 </template>
 
 <script>
 import Train from "./Train.vue";
-import { mapGetters, mapState } from 'vuex'
+import { mapGetters, mapState } from "vuex";
 export default {
   components: { Train },
 
   computed: {
     ...mapState({
-      locomotives: state => state.controller.locomotives
+      locomotives: (state) => state.controller.locomotives,
     }),
   },
 
   data() {
     return {
-      message: "Hello World! This is command module",
       tab: null,
-      text: "",
       drawer: false,
       group: null,
     };
   },
 
-  mounted: function() {
-    },
-    methods: {
-      
-
+  mounted: function () {},
+  methods: {
+    stopAll() {
+        this.$store.dispatch("controller/stopAll");
     }
+  },
 };
 </script>
 

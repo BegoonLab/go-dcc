@@ -2,16 +2,28 @@
     "locomotives": [
         {
             "name": "loco1",
-            "address": 6
+            "address": 6,
+            "direction": 1
         },
         {
             "name": "loco2",
             "address": 7,
+            "direction": 1,
             "fl": true
         },
         {
-            "name": "DCCThing",
+            "name": "Ox Loco",
             "address": 8,
+            "direction": 1,
+            "f1": true,
+            "f2": true,
+            "f3": true,
+            "f4": false
+        },
+        {
+            "name": "Alex Loco",
+            "address": 3,
+            "direction": 1,
             "f1": true,
             "f2": true,
             "f3": true,
