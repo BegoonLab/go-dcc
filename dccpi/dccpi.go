@@ -417,6 +417,7 @@ func (r *repl) run() {
 			}
 			fmt.Println("Configuration saved to", configFlag)
 		case "ui":
+			r.ctrl.Start()
 			dcc.Serve(r.ctrl)
 		default:
 			l, ok := r.ctrl.GetLoco(cmd)
