@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
+	"syscall"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -160,6 +162,30 @@ func (client *Client) readPump() {
 
 		if cj.Started && !ctrl.IsStarted() {
 			ctrl.Start()
+		}
+
+		if cj.Reboot {
+			log.Println("Rebooting the system...")
+
+			syscall.Sync()
+			err := syscall.Reboot(syscall.LINUX_REBOOT_CMD_RESTART)
+
+			if err != nil {
+				log.Printf("Reboot failed: %v", err)
+			}
+			os.Exit(1)
+		}
+
+		if cj.Poweroff {
+			log.Println("Shutdown the system...")
+
+			syscall.Sync()
+			err := syscall.Reboot(syscall.LINUX_REBOOT_CMD_POWER_OFF)
+
+			if err != nil {
+				log.Printf("Shutdown failed: %v", err)
+			}
+			os.Exit(1)
 		}
 
 		for _, loco := range ctrl.Locos() {

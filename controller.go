@@ -31,7 +31,9 @@ type Controller struct {
 
 type ControllerJson struct {
 	Locomotives map[string]*Locomotive `json:"locomotives"`
-	Started bool `json:"started"`
+	Started     bool                   `json:"started"`
+	Reboot      bool                   `json:"reboot"`
+	Poweroff    bool                   `json:"poweroff"`
 }
 
 // NewController builds a Controller.
@@ -49,9 +51,9 @@ func NewController(d Driver) *Controller {
 func (c *Controller) ToJson() []byte {
 	cj := ControllerJson{
 		Locomotives: c.locomotives,
-		Started: c.started,
+		Started:     c.started,
 	}
-	
+
 	d, _ := json.Marshal(cj)
 
 	return d

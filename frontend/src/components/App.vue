@@ -55,19 +55,7 @@
                 v-model="group"
                 active-class="deep-purple--text text--accent-4"
               >
-                <v-list-item>
-                  <v-list-item-icon>
-                    <v-icon>mdi-home</v-icon>
-                  </v-list-item-icon>
-                  <v-list-item-title>Home</v-list-item-title>
-                </v-list-item>
-
-                <v-list-item>
-                  <v-list-item-icon>
-                    <v-icon>mdi-account</v-icon>
-                  </v-list-item-icon>
-                  <v-list-item-title>Account</v-list-item-title>
-                </v-list-item>
+               
                 <v-list-item v-for="item in locomotives" :key="item.address">
                   <v-list-item-action>
                     <v-switch
@@ -82,6 +70,24 @@
                     <v-icon>mdi-tram</v-icon>
                   </v-list-item-icon>
                   <v-list-item-title>{{ item.name }}</v-list-item-title>
+                </v-list-item>
+                <v-list-item>
+                  <v-list-item-title> </v-list-item-title>
+                </v-list-item>
+                 <v-list-item @click="reboot">
+                  <v-list-item-icon>
+                    <v-icon>mdi-restart</v-icon>
+                  </v-list-item-icon>
+                  <v-list-item-title>Reboot</v-list-item-title>
+                </v-list-item>
+                <v-list-item>
+                  <v-list-item-title> </v-list-item-title>
+                </v-list-item>
+                <v-list-item @click="poweroff">
+                  <v-list-item-icon>
+                    <v-icon>mdi-power</v-icon>
+                  </v-list-item-icon>
+                  <v-list-item-title>Shutdown</v-list-item-title>
                 </v-list-item>
               </v-list-item-group>
             </v-list>
@@ -118,6 +124,12 @@ export default {
   methods: {
     stopAll() {
       this.$store.dispatch("controller/stopAll");
+    },
+    reboot() {
+      this.$store.dispatch("controller/reboot");
+    },
+    poweroff() {
+      this.$store.dispatch("controller/poweroff");
     },
     update(name, value, where) {
       this.$store.dispatch("controller/setLocomotiveState", {
