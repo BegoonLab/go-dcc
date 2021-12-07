@@ -71,17 +71,11 @@
                   </v-list-item-icon>
                   <v-list-item-title>{{ item.name }}</v-list-item-title>
                 </v-list-item>
-                <v-list-item>
-                  <v-list-item-title> </v-list-item-title>
-                </v-list-item>
                  <v-list-item @click="reboot">
                   <v-list-item-icon>
                     <v-icon>mdi-restart</v-icon>
                   </v-list-item-icon>
                   <v-list-item-title>Reboot</v-list-item-title>
-                </v-list-item>
-                <v-list-item>
-                  <v-list-item-title> </v-list-item-title>
                 </v-list-item>
                 <v-list-item @click="poweroff">
                   <v-list-item-icon>
