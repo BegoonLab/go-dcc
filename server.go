@@ -154,9 +154,18 @@ func (client *Client) readPump() {
 
 		json.Unmarshal(jsonMessage, &cj)
 
+		if !cj.Started && ctrl.IsStarted() {
+			ctrl.Stop()
+		}
+
+		if cj.Started && !ctrl.IsStarted() {
+			ctrl.Start()
+		}
+
 		for _, loco := range ctrl.Locos() {
 			loco.Speed = cj.Locomotives[loco.Name].Speed
 			loco.Direction = cj.Locomotives[loco.Name].Direction
+			loco.Enabled = cj.Locomotives[loco.Name].Enabled
 			loco.Fl = cj.Locomotives[loco.Name].Fl
 			loco.F1 = cj.Locomotives[loco.Name].F1
 			loco.F2 = cj.Locomotives[loco.Name].F2

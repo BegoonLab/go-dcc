@@ -36,7 +36,7 @@
           vertical
           hint="Im a hint"
           height="270"
-          max="255"
+          max="31"
           min="0"
           :value="locomotive.speed"
           @change="(v) => update(v, 'speed')"
@@ -85,7 +85,7 @@ export default {
   data() {
     return {
       rules: [
-        (v) => v <= 255 || "Max speed is 255",
+        (v) => v <= 31 || "Max speed is 31",
         (v) => v >= 0 || "Min speed is 0",
       ],
       funcNumber: 21,

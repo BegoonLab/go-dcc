@@ -1,13 +1,22 @@
 // initial state
 const state = () => ({
-  locomotives: [],
+  locomotives: {},
   started: false
 })
 
 // getters
 const getters = {
   getLocomotives: (state, getters, rootState) => {
-    return state.locomotives
+    return state.locomotives ? state.locomotives : {}
+  },
+  getEnabledLocomotives: (state, getters, rootState) => {
+    let enabledLocomotives = {}
+    Object.keys(state.locomotives).forEach(key => {
+        if(state.locomotives[key].enabled) {
+            enabledLocomotives[key] = state.locomotives[key]
+        }
+    })
+    return enabledLocomotives
   },
 }
 
@@ -35,12 +44,14 @@ const mutations = {
 
   setLocomotive(state, { name, value, where }) {
     state.locomotives[name][where] = value
+    state.started = true;
   },
 
   stopAll(state) {
     Object.keys(state.locomotives).forEach(key => {
       state.locomotives[key].speed = 0;
     })
+    state.started = false;
   }
 }
 

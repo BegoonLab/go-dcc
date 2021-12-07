@@ -133,6 +133,10 @@ func (c *Controller) Stop() {
 	}
 }
 
+func (c *Controller) IsStarted() bool {
+	return c.started
+}
+
 func (c *Controller) run() {
 	idle := NewBroadcastIdlePacket(c.driver)
 	stop := NewBroadcastStopPacket(c.driver, Forward, false, true)
@@ -159,6 +163,9 @@ func (c *Controller) run() {
 					break // from the select
 				}
 				for _, loco := range c.locomotives {
+					if !loco.Enabled {
+						continue
+					}
 					for i := 0; i < CommandRepeat; i++ {
 						loco.sendPackets(c.driver)
 					}

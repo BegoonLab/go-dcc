@@ -196,6 +196,7 @@ func init() {
 
 func main() {
 	cfg, err := dcc.LoadConfig(configFlag)
+	uiMode := err == nil
 	if err != nil {
 		perr("Error: cannot load configuration. Using empty one.")
 		cfg = &dcc.Config{}
@@ -227,7 +228,12 @@ func main() {
 		r.shutdown()
 	}()
 
-	go r.run()
+	if uiMode {
+		r.ctrl.Start()
+		dcc.Serve(r.ctrl)
+	} else {
+		go r.run()
+	}
 
 	<-r.doneCh
 	os.Exit(0)

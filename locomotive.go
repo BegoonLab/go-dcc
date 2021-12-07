@@ -25,6 +25,7 @@ type Locomotive struct {
 	Address   uint8     `json:"address"`
 	Speed     uint8     `json:"speed"`
 	Direction Direction `json:"direction"`
+	Enabled   bool      `json:"enabled"`
 	Fl        bool      `json:"fl"`
 	F1        bool      `json:"f1"`
 	F2        bool      `json:"f2"`
