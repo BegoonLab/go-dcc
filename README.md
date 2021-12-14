@@ -93,13 +93,13 @@ Installation
 To build/install:
 
 ```go
-> git clone https://github.com/hsanjuan/go-dcc
-> cd go-dcc/dccpi
-> go install
+make build-server
 ```
 
-and the `dccpi` application will be installed in your `$GOPATH/bin` folder.
-
+Autostart from cronjob
+```bash
+@reboot cd /home/pi/Work/go-dcc/dccpi/ && sleep 15 && ./dccpi --config=./initial.json
+```
 
 Running
 -------
