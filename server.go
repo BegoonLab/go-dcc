@@ -17,6 +17,7 @@ var ctrl *Controller
 func Serve(c *Controller) {
 	log.Println("Listening on :3000...")
 	ctrl = c
+	ctrl.Stop()
 	go wsServer.Run()
 	go sendState(c)
 
