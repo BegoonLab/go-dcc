@@ -1,5 +1,26 @@
 <template>
   <v-app>
+    <v-overlay
+        :absolute="false"
+        :value="!isConnected"
+    >
+      <v-row>
+        <v-col class="text-center">
+          Connection lost&nbsp;&nbsp;
+          <v-icon color="red">mdi-connection</v-icon>
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-col>
+          <v-btn
+              color="success"
+              @click="() => (reloadPage())"
+          >
+            <v-icon>mdi-reload</v-icon>&nbsp;&nbsp;Reload page
+          </v-btn>
+        </v-col>
+      </v-row>
+    </v-overlay>
     <v-card class="overflow-hidden">
       <v-app-bar app dense fixed dark flat>
         <v-app-bar-nav-icon @click="drawer = true"></v-app-bar-nav-icon>
@@ -102,7 +123,8 @@ export default {
     ...mapGetters({getEnabledLocomotives: "controller/getEnabledLocomotives"}),
     ...mapState({
       locomotives: (state) => (state.controller.locomotives),
-      isStarted: (state) => (state.controller.started)
+      isStarted: (state) => (state.controller.started),
+      isConnected: (state) => (state.controller.connected),
     })
   },
 
@@ -111,11 +133,15 @@ export default {
       tab: null,
       drawer: false,
       group: null,
+      overlay: true,
     };
   },
 
   mounted: function () {},
   methods: {
+    reloadPage() {
+      window.location.reload()
+    },
     stopAll() {
       this.$store.dispatch("controller/stopAll");
     },

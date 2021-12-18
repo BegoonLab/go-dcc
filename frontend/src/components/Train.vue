@@ -1,12 +1,32 @@
 <template>
   <div class="px-2">
     <v-row>
-      <v-col cols="8">
+      <v-col cols="4">
+
+          <v-text-field
+              label="Address"
+              :value="locomotive.address"
+              readonly
+          ></v-text-field>
+      </v-col>
+      <v-col cols="4">
         <v-text-field
-          label="Address"
-          :value="locomotive.address"
-          readonly
+            label="Name"
+            :value="locomotive.name"
+            readonly
         ></v-text-field>
+      </v-col>
+      <v-col cols="4">
+        <v-text-field
+            label="Speed"
+            :value="locomotive.speed"
+            readonly
+            type="number"
+        ></v-text-field>
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col cols="8">
         <v-switch
           :label="`Direction: ${
             locomotive.direction === 1 ? 'Forward >>' : '<< Backward'
@@ -25,12 +45,6 @@
         ></v-switch>
       </v-col>
       <v-col cols="4" class="text-center">
-        <v-text-field
-          label="Speed"
-          :value="locomotive.speed"
-          readonly
-          type="number"
-        ></v-text-field>
         <v-slider
           justify-center
           vertical

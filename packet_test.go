@@ -1,6 +1,7 @@
 package dcc
 
 import (
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -74,4 +75,18 @@ func TestNewBroadcastStopPacket(t *testing.T) {
 	if p.String() != "11111111111111110000000000010000000010000001" {
 		t.Error("Bad stop packet: ", p.String())
 	}
+}
+
+func TestCorrectSpeedPacketBits(t *testing.T) {
+	p := NewSpeedAndDirectionPacket(&dummy.DCCDummy{}, 0xFF, 0, Forward)
+	if p.String() != "11111111111111110011111110011000000000111111" {
+		t.Error("Bad speed and direction packet: ", p.String())
+	}
+	fmt.Println(p.String())
+	//                         ->        <-
+	// 11111111111111110011111110011000010000111101
+	// 11111111111111110011111110011000000000111111 <- 0
+	// 11111111111111110011111110011000010000111101 <- 1
+	// 11111111111111110011111110011000100000111011 <- 2
+	// 11111111111111110011111110011000110000111001 <- 3
 }

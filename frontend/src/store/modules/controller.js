@@ -4,6 +4,7 @@ const state = () => ({
     started: false,
     reboot: false,
     poweroff: false,
+    connected: false,
 })
 
 // getters
@@ -42,6 +43,14 @@ const actions = {
 
     poweroff({ state, commit }) {
         commit('poweroff')
+    },
+
+    connected({ state, commit }) {
+        commit('connected')
+    },
+
+    disconnected({ state, commit }) {
+        commit('disconnected')
     }
 }
 
@@ -70,7 +79,16 @@ const mutations = {
 
     poweroff(state) {
         state.poweroff = true;
-    }
+    },
+
+    connected(state) {
+        state.connected = true;
+    },
+
+    disconnected(state) {
+        state.connected = false;
+    },
+
 }
 
 export default {

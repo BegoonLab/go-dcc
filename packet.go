@@ -1,6 +1,8 @@
 package dcc
 
-import "time"
+import (
+	"time"
+)
 
 // DCC protocol-defined values for reference.
 const (
@@ -23,7 +25,7 @@ var (
 
 // HeadlightCompatMode controls if one bit in the speed instruction is
 // reserved for headlight. This reduces speed steps from 32 to 16 steps.
-var HeadlightCompatMode = false
+const HeadlightCompatMode = false
 
 // Packet represents the unit of information that can be sent to the DCC
 // devices in the system. Packet implements the DCC protocol for converting
