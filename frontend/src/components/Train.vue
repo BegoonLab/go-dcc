@@ -52,7 +52,11 @@
           height="270"
           max="31"
           min="0"
+          :thumb-color="`rgb(${targetSpeed * 8} 100 50)`"
+          :thumb-size="48"
+          :thumb-label="true"
           :value="locomotive.speed"
+          @input="(v) => targetSpeed = v"
           @change="(v) => update(v, 'speed')"
         ></v-slider>
         <v-btn
@@ -103,6 +107,7 @@ export default {
         (v) => v >= 0 || "Min speed is 0",
       ],
       funcNumber: 21,
+      targetSpeed: 0,
     };
   },
   methods: {
@@ -127,5 +132,14 @@ p {
   height: 20px;
   display: flex;
   justify-content: center;
+}
+.v-slider__thumb-label {
+  transform: translateY(20%) translateY(15px) translateX(-200%) rotate(-45deg) !important;
+}
+.v-slider__thumb-label div {
+  transform: rotate(45deg) !important;
+}
+.v-slider__thumb-label span {
+  font-size: 2em;
 }
 </style>
