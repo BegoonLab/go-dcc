@@ -26,3 +26,10 @@ _testmain.go
 *.prof
 .vscode/*
 frontend/node_modules/*
+/.idea/deployment.xml
+/.idea/go-dcc.iml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/sshConfigs.xml
+/.idea/vcs.xml
+/.idea/webServers.xml

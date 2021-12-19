@@ -72,7 +72,7 @@ func NewSpeedAndDirectionPacket(d Driver, addr byte, speed byte, dir Direction) 
 	if HeadlightCompatMode {
 		speed = speed & 0x0F // 4 lower bytes
 	} else {
-		speed = speed & 0x1F // 5 lower bytes
+		speed = (speed << 7 >> 3) | (speed >> 1) // 5 lower bytes
 	}
 
 	dirB := byte(0x1&dir) << 5
