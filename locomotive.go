@@ -161,6 +161,8 @@ func (l *Locomotive) Apply() {
 		l.flPacket = nil
 		l.fGroupTwoPacket0 = nil
 		l.fGroupTwoPacket1 = nil
+		l.fExpansionPacket0 = nil
+		l.fExpansionPacket1 = nil
 	}
 	l.mux.Unlock()
 }
