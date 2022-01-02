@@ -30,10 +30,10 @@
         <v-spacer></v-spacer>
 
         <v-btn
-          depressed
-          color="error"
-          :disabled="!isStarted"
-          @click="
+            depressed
+            color="error"
+            :disabled="!isStarted"
+            @click="
             () => {
               stopAll();
             }
@@ -53,15 +53,15 @@
         </template>
       </v-app-bar>
       <v-sheet
-        id="scrolling-techniques-3"
-        class="overflow-y-auto"
-        height="1000px"
+          id="scrolling-techniques-3"
+          class="overflow-y-auto"
+          height="1000px"
       >
-        <v-container fluid class="px-0 py-10">
+        <v-container fluid class="px-0 py-10 overflow-x-hidden">
           <v-tabs-items v-model="tab" class="px-0 py-15">
             <v-tab-item
-              v-for="item in getEnabledLocomotives"
-              :key="item.address"
+                v-for="item in getEnabledLocomotives"
+                :key="item.address"
             >
               <v-row :justify="'center'">
                 <v-col md="4" sm="12" xs="12">
@@ -73,18 +73,18 @@
           <v-navigation-drawer v-model="drawer" absolute temporary>
             <v-list nav dense>
               <v-list-item-group
-                v-model="group"
-                active-class="deep-purple--text text--accent-4"
+                  v-model="group"
+                  active-class="deep-purple--text text--accent-4"
               >
-               
+
                 <v-list-item v-for="item in locomotives" :key="item.address">
                   <v-list-item-action>
                     <v-switch
-                      :color="'green'"
-                      :true-value="true"
-                      :false-value="false"
-                      :input-value="item.enabled"
-                      @change="(v) => update(item.name, v, 'enabled')"
+                        :color="'green'"
+                        :true-value="true"
+                        :false-value="false"
+                        :input-value="item.enabled"
+                        @change="(v) => update(item.name, v, 'enabled')"
                     ></v-switch>
                   </v-list-item-action>
                   <v-list-item-icon>
@@ -92,7 +92,7 @@
                   </v-list-item-icon>
                   <v-list-item-title>{{ item.name }}</v-list-item-title>
                 </v-list-item>
-                 <v-list-item @click="reboot">
+                <v-list-item @click="reboot">
                   <v-list-item-icon>
                     <v-icon>mdi-restart</v-icon>
                   </v-list-item-icon>
@@ -107,17 +107,49 @@
               </v-list-item-group>
             </v-list>
           </v-navigation-drawer>
+          <v-row
+              v-if="getEnabledLocomotives && Object.keys(getEnabledLocomotives).length === 0 && Object.getPrototypeOf(getEnabledLocomotives) === Object.prototype">
+            <v-col>
+              <v-row :justify="'center'">
+                <v-col md="4" sm="12" xs="12" class="text-center">
+                  No active locomotives found
+                </v-col>
+              </v-row>
+              <v-row :justify="'center'">
+                <v-col md="4" sm="12" xs="12" class="text-center">
+                  <v-btn
+                      color="success"
+                      @click="() => (drawer = true)"
+                  >
+                    <v-icon>mdi-tram</v-icon>&nbsp;&nbsp;Activate locomotives
+                  </v-btn>
+                </v-col>
+              </v-row>
+            </v-col>
+          </v-row>
+
         </v-container>
       </v-sheet>
     </v-card>
+    <v-footer bottom padless>
+      <v-container fluid class="px-0 py-10">
+        <v-row>
+          <v-col>
+            <span class="creds">Created and Designed by:</span>
+            <v-img class="mx-auto" max-width="300" width="60%" contain src="begoon-lab-logo.png"></v-img>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-footer>
   </v-app>
 </template>
 
 <script>
 import Train from "./Train.vue";
-import { mapGetters, mapState } from "vuex";
+import {mapGetters, mapState} from "vuex";
+
 export default {
-  components: { Train },
+  components: {Train},
 
   computed: {
     ...mapGetters({getEnabledLocomotives: "controller/getEnabledLocomotives"}),
@@ -137,7 +169,8 @@ export default {
     };
   },
 
-  mounted: function () {},
+  mounted: function () {
+  },
   methods: {
     reloadPage() {
       window.location.reload()
@@ -167,5 +200,14 @@ p {
   font-size: 18px;
   font-family: "Roboto", sans-serif;
   color: blue;
+}
+.container {
+  background: #FFF;
+}
+footer {
+  font-size: 8pt;
+}
+.creds {
+  padding-left: 29%;
 }
 </style>

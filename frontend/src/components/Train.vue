@@ -74,7 +74,7 @@
       </v-col>
     </v-row>
     <v-row>
-      <v-col cols="4" v-for="func in funcNumber" :key="func">
+      <v-col cols="4" v-for="(func, index) in funcNumber" :key="func">
         <div class="f-checkbox">
           <v-checkbox 
             :label="`F${func}`"
@@ -84,6 +84,7 @@
             @change="(v) => update(v, 'f'+func)"
           ></v-checkbox>
         </div>
+        <br v-if="(index + 2) % 9 === 0" />
       </v-col>
     </v-row>
   </div>
@@ -106,7 +107,7 @@ export default {
         (v) => v <= 31 || "Max speed is 31",
         (v) => v >= 0 || "Min speed is 0",
       ],
-      funcNumber: 21,
+      funcNumber: 28,
       targetSpeed: 0,
     };
   },

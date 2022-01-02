@@ -7,7 +7,7 @@ import (
 
 // CommandRepeat specifies how many times a single
 // packet is sent.
-var CommandRepeat = 30
+var CommandRepeat = 10
 
 // CommandMaxQueue specifies how many commands can
 // queue before sending a new command blocks

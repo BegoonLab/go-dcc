@@ -171,6 +171,100 @@ func NewFunctionGroupTwoPacket(d Driver, addr byte, f5, f6, f7, f8, f9, f10, f11
 		}
 }
 
+// NewFunctionExpansionPacket returns two advanced 2-byte DCC packet which allows to
+// control F13-F28 functions.
+func NewFunctionExpansionPacket(d Driver, addr byte, f13, f14, f15, f16, f17, f18,
+	f19, f20, f21, f22, f23, f24, f25, f26, f27, f28 bool) (*Packet, *Packet) {
+
+	var dataA0, dataA1, dataB0, dataB1,
+		f13n, f14n, f15n, f16n, f17n, f18n,
+		f19n, f20n, f21n, f22n, f23n,
+		f24n, f25n, f26n, f27n, f28n byte = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+
+	if f13 {
+		f13n = 1
+	}
+
+	if f14 {
+		f14n = 1 << 1
+	}
+
+	if f15 {
+		f15n = 1 << 2
+	}
+
+	if f16 {
+		f16n = 1 << 3
+	}
+
+	if f17 {
+		f17n = 1 << 4
+	}
+
+	if f18 {
+		f18n = 1 << 5
+	}
+
+	if f19 {
+		f19n = 1 << 6
+	}
+
+	if f20 {
+		f20n = 1 << 7
+	}
+
+	if f21 {
+		f21n = 1
+	}
+
+	if f22 {
+		f22n = 1 << 1
+	}
+
+	if f23 {
+		f23n = 1 << 2
+	}
+
+	if f24 {
+		f24n = 1 << 3
+	}
+
+	if f25 {
+		f25n = 1 << 4
+	}
+
+	if f26 {
+		f26n = 1 << 5
+	}
+
+	if f27 {
+		f27n = 1 << 6
+	}
+
+	if f28 {
+		f28n = 1 << 7
+	}
+
+	dataA0 = 0b11011110
+	dataA1 = f13n | f14n | f15n | f16n | f17n | f18n | f19n | f20n
+
+	dataB0 = 0b11011111
+	dataB1 = f21n | f22n | f23n | f24n | f25n | f26n | f27n | f28n
+
+	return &Packet{
+			driver:  d,
+			address: addr,
+			data:    []byte{dataA0, dataA1},
+			ecc:     addr ^ dataA0 ^ dataA1,
+		},
+		&Packet{
+			driver:  d,
+			address: addr,
+			data:    []byte{dataB0, dataB1},
+			ecc:     addr ^ dataB0 ^ dataB1,
+		}
+}
+
 // NewBroadcastResetPacket returns a new broadcast baseline DCC packet which
 // makes the decoders erase their volatile memory and return to power up
 // state. This stops all locomotives at non-zero speed.

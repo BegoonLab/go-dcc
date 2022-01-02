@@ -215,6 +215,13 @@ func (client *Client) readPump() {
 			loco.F19 = cj.Locomotives[loco.Name].F19
 			loco.F20 = cj.Locomotives[loco.Name].F20
 			loco.F21 = cj.Locomotives[loco.Name].F21
+			loco.F22 = cj.Locomotives[loco.Name].F22
+			loco.F23 = cj.Locomotives[loco.Name].F23
+			loco.F24 = cj.Locomotives[loco.Name].F24
+			loco.F25 = cj.Locomotives[loco.Name].F25
+			loco.F26 = cj.Locomotives[loco.Name].F26
+			loco.F27 = cj.Locomotives[loco.Name].F27
+			loco.F28 = cj.Locomotives[loco.Name].F28
 
 			loco.Apply()
 		}

@@ -48,13 +48,28 @@ type Locomotive struct {
 	F19       bool      `json:"f19"`
 	F20       bool      `json:"f20"`
 	F21       bool      `json:"f21"`
+	F22       bool      `json:"f22"`
+	F23       bool      `json:"f23"`
+	F24       bool      `json:"f24"`
+	F25       bool      `json:"f25"`
+	F26       bool      `json:"f26"`
+	F27       bool      `json:"f27"`
+	F28       bool      `json:"f28"`
 
 	mux sync.Mutex
 
-	speedPacket      *Packet
-	flPacket         *Packet
+	speedPacket *Packet
+	flPacket    *Packet
+
+	sendGroupTwo     bool
 	fGroupTwoPacket0 *Packet
 	fGroupTwoPacket1 *Packet
+
+	sendExpansion0    bool
+	fExpansionPacket0 *Packet
+
+	sendExpansion1    bool
+	fExpansionPacket1 *Packet
 }
 
 func (l *Locomotive) String() string {
@@ -94,7 +109,15 @@ func (l *Locomotive) String() string {
 func (l *Locomotive) sendPackets(d Driver) {
 	l.mux.Lock()
 	{
-
+		if !l.sendGroupTwo {
+			l.sendGroupTwo = l.F5 || l.F6 || l.F7 || l.F8 || l.F9 || l.F10 || l.F11 || l.F12
+		}
+		if !l.sendExpansion0 {
+			l.sendExpansion0 = l.F13 || l.F14 || l.F15 || l.F16 || l.F17 || l.F18 || l.F19 || l.F20
+		}
+		if !l.sendExpansion1 {
+			l.sendExpansion1 = l.F21 || l.F22 || l.F23 || l.F24 || l.F25 || l.F26 || l.F27 || l.F28
+		}
 		if l.speedPacket == nil {
 			l.speedPacket = NewSpeedAndDirectionPacket(d,
 				l.Address, l.Speed, l.Direction)
@@ -103,15 +126,26 @@ func (l *Locomotive) sendPackets(d Driver) {
 			l.flPacket = NewFunctionGroupOnePacket(d,
 				l.Address, l.Fl, l.F1, l.F2, l.F3, l.F4)
 		}
-		if l.fGroupTwoPacket0 == nil && (l.F5 || l.F6 || l.F7 || l.F8 || l.F9 || l.F10 || l.F11 || l.F12) {
+		if l.fGroupTwoPacket0 == nil {
 			l.fGroupTwoPacket0, l.fGroupTwoPacket1 = NewFunctionGroupTwoPacket(d,
 				l.Address, l.F5, l.F6, l.F7, l.F8, l.F9, l.F10, l.F11, l.F12)
 		}
+		if l.fExpansionPacket0 == nil {
+			l.fExpansionPacket0, l.fExpansionPacket1 = NewFunctionExpansionPacket(d,
+				l.Address, l.F13, l.F14, l.F15, l.F16, l.F17, l.F18, l.F19, l.F20,
+				l.F21, l.F22, l.F23, l.F24, l.F25, l.F26, l.F27, l.F28)
+		}
 		l.speedPacket.Send()
 		l.flPacket.Send()
-		if l.fGroupTwoPacket0 != nil {
+		if l.sendGroupTwo {
 			l.fGroupTwoPacket0.Send()
 			l.fGroupTwoPacket1.Send()
+		}
+		if l.sendExpansion0 {
+			l.fExpansionPacket0.Send()
+		}
+		if l.sendExpansion1 {
+			l.fExpansionPacket1.Send()
 		}
 	}
 	l.mux.Unlock()
