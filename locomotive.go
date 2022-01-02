@@ -51,8 +51,10 @@ type Locomotive struct {
 
 	mux sync.Mutex
 
-	speedPacket *Packet
-	flPacket    *Packet
+	speedPacket      *Packet
+	flPacket         *Packet
+	fGroupTwoPacket0 *Packet
+	fGroupTwoPacket1 *Packet
 }
 
 func (l *Locomotive) String() string {
@@ -101,8 +103,16 @@ func (l *Locomotive) sendPackets(d Driver) {
 			l.flPacket = NewFunctionGroupOnePacket(d,
 				l.Address, l.Fl, l.F1, l.F2, l.F3, l.F4)
 		}
+		if l.fGroupTwoPacket0 == nil && (l.F5 || l.F6 || l.F7 || l.F8 || l.F9 || l.F10 || l.F11 || l.F12) {
+			l.fGroupTwoPacket0, l.fGroupTwoPacket1 = NewFunctionGroupTwoPacket(d,
+				l.Address, l.F5, l.F6, l.F7, l.F8, l.F9, l.F10, l.F11, l.F12)
+		}
 		l.speedPacket.Send()
 		l.flPacket.Send()
+		if l.fGroupTwoPacket0 != nil {
+			l.fGroupTwoPacket0.Send()
+			l.fGroupTwoPacket1.Send()
+		}
 	}
 	l.mux.Unlock()
 }
@@ -115,6 +125,8 @@ func (l *Locomotive) Apply() {
 	{
 		l.speedPacket = nil
 		l.flPacket = nil
+		l.fGroupTwoPacket0 = nil
+		l.fGroupTwoPacket1 = nil
 	}
 	l.mux.Unlock()
 }

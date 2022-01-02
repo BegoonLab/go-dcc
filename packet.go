@@ -116,6 +116,61 @@ func NewFunctionGroupOnePacket(d Driver, addr byte, fl, fl1, fl2, fl3, fl4 bool)
 	}
 }
 
+// NewFunctionGroupTwoPacket returns two advanced DCC packet which allows to
+// control F5-F12 functions.
+func NewFunctionGroupTwoPacket(d Driver, addr byte, f5, f6, f7, f8, f9, f10, f11, f12 bool) (*Packet, *Packet) {
+
+	var data0, data1, f5n, f6n, f7n, f8n, f9n, f10n, f11n, f12n byte = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+
+	if f5 {
+		f5n = 1
+	}
+
+	if f6 {
+		f6n = 1 << 1
+	}
+
+	if f7 {
+		f7n = 1 << 2
+	}
+
+	if f8 {
+		f8n = 1 << 3
+	}
+
+	if f9 {
+		f9n = 1
+	}
+
+	if f10 {
+		f10n = 1 << 1
+	}
+
+	if f11 {
+		f11n = 1 << 2
+	}
+
+	if f12 {
+		f12n = 1 << 3
+	}
+
+	data0 = (1 << 7) | (1 << 5) | (1 << 4) | f5n | f6n | f7n | f8n
+	data1 = (1 << 7) | (1 << 5) | f9n | f10n | f11n | f12n
+
+	return &Packet{
+			driver:  d,
+			address: addr,
+			data:    []byte{data0},
+			ecc:     addr ^ data0,
+		},
+		&Packet{
+			driver:  d,
+			address: addr,
+			data:    []byte{data1},
+			ecc:     addr ^ data1,
+		}
+}
+
 // NewBroadcastResetPacket returns a new broadcast baseline DCC packet which
 // makes the decoders erase their volatile memory and return to power up
 // state. This stops all locomotives at non-zero speed.

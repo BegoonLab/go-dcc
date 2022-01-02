@@ -117,3 +117,13 @@ func TestCorrectSpeedPacketBits(t *testing.T) {
 		t.Error("Bad speed and direction packet: ", p.String())
 	}
 }
+
+func TestNewFunctionGroupTwoPacket(t *testing.T) {
+	p0, p1 := NewFunctionGroupTwoPacket(&dummy.DCCDummy{}, 0xFF, true, false, true, false, true, false, true, false)
+	if p0.String() != "11111111111111110111111110101101010010010101" {
+		t.Error("Bad Function Group Two packet 0: ", p0.String())
+	}
+	if p1.String() != "11111111111111110111111110101001010010110101" {
+		t.Error("Bad Function Group Two packet 1: ", p1.String())
+	}
+}
