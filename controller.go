@@ -172,6 +172,7 @@ func (c *Controller) run() {
 						loco.sendPackets(c.driver)
 					}
 				}
+				idle.Send()
 			}
 			c.mux.RUnlock()
 			idle.PacketPause()
