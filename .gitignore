@@ -33,3 +33,5 @@ frontend/node_modules/*
 /.idea/sshConfigs.xml
 /.idea/vcs.xml
 /.idea/webServers.xml
+
+/vendor
