@@ -1,20 +1,25 @@
-package dcc
+package server
 
 import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"os"
 	"syscall"
 	"time"
 
+	"go.uber.org/zap"
+
+	"github.com/alexbegoon/go-dcc/software/dccpi/internal/controller"
 	"github.com/gorilla/websocket"
 )
 
-var wsServer = NewWebsocketServer()
-var ctrl *Controller
+var (
+	wsServer *WsServer
+	ctrl     *controller.Controller
+)
 
-func Serve(c *Controller) {
+func Serve(c *controller.Controller) *http.Server {
+	wsServer = NewWebsocketServer(c.Log)
 	log.Println("Listening on :3000...")
 	ctrl = c
 	ctrl.Stop()
@@ -25,13 +30,21 @@ func Serve(c *Controller) {
 		ServeWs(wsServer, w, r)
 	})
 
-	fs := http.FileServer(http.Dir("../public"))
+	fs := http.FileServer(http.Dir("../../../frontend/public"))
 	http.Handle("/", fs)
 
-	err := http.ListenAndServe(":3000", nil)
-	if err != nil {
-		log.Fatal(err)
+	server := &http.Server{
+		Addr:              ":3000",
+		ReadHeaderTimeout: 3 * time.Second,  // nolint:gomnd
+		ReadTimeout:       10 * time.Second, // nolint:gomnd
+		WriteTimeout:      10 * time.Second, // nolint:gomnd
 	}
+
+	if err := server.ListenAndServe(); err != nil {
+		c.Log.Error("Unable to start server", zap.Error(err))
+	}
+
+	return server
 }
 
 type WsServer struct {
@@ -39,22 +52,24 @@ type WsServer struct {
 	register   chan *Client
 	unregister chan *Client
 	broadcast  chan []byte
+	log        *zap.Logger
 }
 
-func sendState(ctrl *Controller) {
+func sendState(ctrl *controller.Controller) {
 	for {
-		time.Sleep(3 * time.Second)
-		wsServer.broadcastToClients(ctrl.ToJson())
+		time.Sleep(3 * time.Second) // nolint:forbidigo,gomnd
+		wsServer.broadcastToClients(ctrl.ToJSON())
 	}
 }
 
 // NewWebsocketServer creates a new WsServer type
-func NewWebsocketServer() *WsServer {
+func NewWebsocketServer(log *zap.Logger) *WsServer {
 	return &WsServer{
 		clients:    make(map[*Client]bool),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		broadcast:  make(chan []byte),
+		log:        log,
 	}
 }
 
@@ -72,7 +87,6 @@ func (server *WsServer) Run() {
 		case message := <-server.broadcast:
 			server.broadcastToClients(message)
 		}
-
 	}
 }
 
@@ -81,9 +95,7 @@ func (server *WsServer) registerClient(client *Client) {
 }
 
 func (server *WsServer) unregisterClient(client *Client) {
-	if _, ok := server.clients[client]; ok {
-		delete(server.clients, client)
-	}
+	delete(server.clients, client)
 }
 
 func (server *WsServer) broadcastToClients(message []byte) {
@@ -100,20 +112,17 @@ const (
 	pongWait = 60 * time.Second
 
 	// Send ping interval, must be less then pong wait time
-	pingPeriod = (pongWait * 9) / 10
+	pingPeriod = (pongWait * 9) / 10 // nolint:gomnd
 
 	// Maximum message size allowed from peer.
 	maxMessageSize = 10000
 )
 
-var (
-	newline = []byte{'\n'}
-	space   = []byte{' '}
-)
+var newline = []byte{'\n'}
 
 var upgrader = websocket.Upgrader{
-	ReadBufferSize:  4096,
-	WriteBufferSize: 4096,
+	ReadBufferSize:  4096, // nolint:gomnd
+	WriteBufferSize: 4096, // nolint:gomnd
 	CheckOrigin:     func(*http.Request) bool { return true },
 }
 
@@ -123,15 +132,16 @@ type Client struct {
 	conn     *websocket.Conn
 	wsServer *WsServer
 	send     chan []byte
+	log      *zap.Logger
 }
 
-func newClient(conn *websocket.Conn, wsServer *WsServer) *Client {
+func newClient(conn *websocket.Conn, wsServer *WsServer, log *zap.Logger) *Client {
 	return &Client{
 		conn:     conn,
 		wsServer: wsServer,
-		send:     make(chan []byte, 256),
+		send:     make(chan []byte, 256), // nolint:gomnd
+		log:      log,
 	}
-
 }
 
 func (client *Client) readPump() {
@@ -140,22 +150,31 @@ func (client *Client) readPump() {
 	}()
 
 	client.conn.SetReadLimit(maxMessageSize)
-	client.conn.SetReadDeadline(time.Now().Add(pongWait))
-	client.conn.SetPongHandler(func(string) error { client.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	err := client.conn.SetReadDeadline(time.Now().Add(pongWait))
+	if err != nil {
+		client.log.Error("Unable to set read deadline", zap.Error(err))
+	}
+
+	client.conn.SetPongHandler(func(string) error { return client.conn.SetReadDeadline(time.Now().Add(pongWait)) })
 
 	// Start endless read loop, waiting for messages from client
 	for {
 		_, jsonMessage, err := client.conn.ReadMessage()
 		if err != nil {
+			client.log.Error("Unable to Read Message", zap.Error(err))
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("unexpected close error: %v", err)
+				client.log.Error("unexpected close error", zap.Error(err))
 			}
+
 			break
 		}
 
-		var cj *ControllerJson
+		var cj *controller.ControllerJSON
 
-		json.Unmarshal(jsonMessage, &cj)
+		err = json.Unmarshal(jsonMessage, &cj)
+		if err != nil {
+			client.log.Error("Unable to Unmarshal", zap.Error(err))
+		}
 
 		if !cj.Started && ctrl.IsStarted() {
 			ctrl.Stop()
@@ -169,24 +188,20 @@ func (client *Client) readPump() {
 			log.Println("Rebooting the system...")
 
 			syscall.Sync()
-			err := syscall.Reboot(syscall.LINUX_REBOOT_CMD_RESTART)
-
+			err = syscall.Reboot(syscall.LINUX_REBOOT_CMD_RESTART)
 			if err != nil {
 				log.Printf("Reboot failed: %v", err)
 			}
-			os.Exit(1)
 		}
 
 		if cj.Poweroff {
-			log.Println("Shutdown the system...")
+			client.log.Info("Shutdown the system...", zap.Error(err))
 
 			syscall.Sync()
 			err := syscall.Reboot(syscall.LINUX_REBOOT_CMD_POWER_OFF)
-
 			if err != nil {
-				log.Printf("Shutdown failed: %v", err)
+				client.log.Error("Shutdown failed", zap.Error(err))
 			}
-			os.Exit(1)
 		}
 
 		for _, loco := range ctrl.Locos() {
@@ -228,22 +243,31 @@ func (client *Client) readPump() {
 
 		client.wsServer.broadcast <- jsonMessage
 	}
-
 }
 
 func (client *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
-		client.conn.Close()
+		err := client.conn.Close()
+		if err != nil {
+			return
+		}
 	}()
 	for {
 		select {
 		case message, ok := <-client.send:
-			client.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			err := client.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err != nil {
+				client.log.Error("Unable to set write deadline", zap.Error(err))
+			}
 			if !ok {
 				// The WsServer closed the channel.
-				client.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				err = client.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				if err != nil {
+					client.log.Error("Unable to write message", zap.Error(err))
+				}
+
 				return
 			}
 
@@ -251,20 +275,35 @@ func (client *Client) writePump() {
 			if err != nil {
 				return
 			}
-			w.Write(message)
+			_, err = w.Write(message)
+			if err != nil {
+				client.log.Error("Unable to write", zap.Error(err))
+			}
 
 			// Attach queued chat messages to the current websocket message.
 			n := len(client.send)
 			for i := 0; i < n; i++ {
-				w.Write(newline)
-				w.Write(<-client.send)
+				_, err = w.Write(newline)
+				if err != nil {
+					client.log.Error("Unable to write", zap.Error(err))
+				}
+				if err != nil {
+					return
+				}
+				_, err = w.Write(<-client.send)
+				if err != nil {
+					client.log.Error("Unable to write", zap.Error(err))
+				}
 			}
 
 			if err := w.Close(); err != nil {
 				return
 			}
 		case <-ticker.C:
-			client.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			err := client.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err != nil {
+				client.log.Error("Unable to set write deadline", zap.Error(err))
+			}
 			if err := client.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}
@@ -275,19 +314,21 @@ func (client *Client) writePump() {
 func (client *Client) disconnect() {
 	client.wsServer.unregister <- client
 	close(client.send)
-	client.conn.Close()
+	if err := client.conn.Close(); err != nil {
+		client.log.Error("Unable to close connection", zap.Error(err))
+	}
 }
 
 // ServeWs handles websocket requests from clients requests.
 func ServeWs(wsServer *WsServer, w http.ResponseWriter, r *http.Request) {
-
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
+
 		return
 	}
 
-	client := newClient(conn, wsServer)
+	client := newClient(conn, wsServer, wsServer.log)
 
 	go client.writePump()
 	go client.readPump()

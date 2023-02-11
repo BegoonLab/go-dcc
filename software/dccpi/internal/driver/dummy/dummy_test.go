@@ -18,14 +18,14 @@ func TestGuessBuffer(t *testing.T) {
 	d.TracksOff()
 	d.TracksOn()
 	d.Low()
-	time.Sleep(5000 * time.Microsecond)
+	time.Sleep(5000 * time.Microsecond) // nolint:forbidigo
 	d.High()
-	time.Sleep(5000 * time.Microsecond)
+	time.Sleep(5000 * time.Microsecond) // nolint:forbidigo
 	d.Low()
-	time.Sleep(5000 * time.Microsecond)
+	time.Sleep(5000 * time.Microsecond) // nolint:forbidigo
 	d.High()
 	d.Low()
-	time.Sleep(time.Second)
+	time.Sleep(time.Second) // nolint:forbidigo
 	d.High()
 
 	if GuessBuffer.String() != "00\n" {

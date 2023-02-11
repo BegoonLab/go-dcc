@@ -20,9 +20,9 @@ var (
 )
 
 func init() {
-	err := rpio.Open()
-	if err != nil {
+	if err := rpio.Open(); err != nil {
 		fmt.Fprintf(os.Stderr, "Cannot initialize GPIO: "+err.Error()+".\n")
+
 		return
 	}
 	BrakeGPIO.Output()
@@ -30,14 +30,13 @@ func init() {
 	SignalGPIO.Output()
 }
 
-type DCCPi struct {
-}
+type DCCPi struct{}
 
 func NewDCCPi() (*DCCPi, error) {
-	err := rpio.Open()
-	if err != nil {
+	if err := rpio.Open(); err != nil {
 		return nil, err
 	}
+
 	return &DCCPi{}, nil
 }
 

@@ -1,8 +1,14 @@
-package dcc
+package controller
 
 import (
 	"encoding/json"
 	"sync"
+
+	"go.uber.org/zap"
+
+	"github.com/alexbegoon/go-dcc/software/dccpi/internal/config"
+	"github.com/alexbegoon/go-dcc/software/dccpi/internal/locomotive"
+	"github.com/alexbegoon/go-dcc/software/dccpi/internal/packet"
 )
 
 // CommandRepeat specifies how many times a single
@@ -14,70 +20,95 @@ var CommandRepeat = 10
 // the sender
 var CommandMaxQueue = 3
 
+// Driver can be implemented by any module to allow using go-dcc
+// on different platforms. dcc.Driver modules are in charge of
+// producing an electrical signal output (i.e. on a GPIO Pin)
+type Driver interface {
+	// Low sets the output to low state.
+	Low()
+	// High sets the output to high.
+	High()
+	// TracksOn turns the tracks on. The exact procedure is left to the
+	// implementation, but tracks should be ready to receive packets from
+	// this point.
+	TracksOn()
+	// TracksOff disables the tracks. The exact procedure is left to the
+	// implementation, but tracks should not carry any power and all
+	// trains should stop after calling it.
+	TracksOff()
+}
+
 // Controller represents a DCC Control Station. The
 // controller keeps tracks of the DCC Locomotives and
 // is in charge of sending DCC packets continuously to
 // the tracks.
 type Controller struct {
-	locomotives map[string]*Locomotive
+	locomotives map[string]*locomotive.Locomotive
 	mux         sync.RWMutex
 	driver      Driver
 
 	started    bool
 	doneCh     chan bool
 	shutdownCh chan bool
-	commandCh  chan *Packet
+	commandCh  chan *packet.Packet
+	Log        *zap.Logger
 }
 
-type ControllerJson struct {
-	Locomotives map[string]*Locomotive `json:"locomotives"`
-	Started     bool                   `json:"started"`
-	Reboot      bool                   `json:"reboot"`
-	Poweroff    bool                   `json:"poweroff"`
+type ControllerJSON struct {
+	Locomotives map[string]*locomotive.Locomotive `json:"locomotives"`
+	Started     bool                              `json:"started"`
+	Reboot      bool                              `json:"reboot"`
+	Poweroff    bool                              `json:"poweroff"`
 }
 
 // NewController builds a Controller.
 func NewController(d Driver) *Controller {
 	d.TracksOff()
+
 	return &Controller{
 		driver:      d,
-		locomotives: make(map[string]*Locomotive),
+		locomotives: make(map[string]*locomotive.Locomotive),
 		doneCh:      make(chan bool),
 		shutdownCh:  make(chan bool),
-		commandCh:   make(chan *Packet, CommandMaxQueue),
+		commandCh:   make(chan *packet.Packet, CommandMaxQueue),
 	}
 }
 
-func (c *Controller) ToJson() []byte {
-	cj := ControllerJson{
+func (c *Controller) ToJSON() []byte {
+	cj := ControllerJSON{
 		Locomotives: c.locomotives,
 		Started:     c.started,
 	}
 
-	d, _ := json.Marshal(cj)
+	d, err := json.Marshal(cj)
+	if err != nil {
+		c.Log.Error("Cannot marshal", zap.Error(err))
+	}
 
 	return d
 }
 
 // NewControllerWithConfig builds a new Controller using the
 // given configuration.
-func NewControllerWithConfig(d Driver, cfg *Config) *Controller {
+func NewControllerWithConfig(d Driver, cfg *config.Config) *Controller {
 	c := NewController(d)
 
 	for _, loco := range cfg.Locomotives {
-		c.AddLoco(&Locomotive{
+		c.AddLoco(&locomotive.Locomotive{
 			Name:      loco.Name,
 			Address:   loco.Address,
 			Speed:     loco.Speed,
 			Direction: loco.Direction,
-			Fl:        loco.Fl})
+			Fl:        loco.Fl,
+		})
 	}
+
 	return c
 }
 
 // AddLoco adds a DCC device to the controller. The device
 // will start receiving packets if the controller is running.
-func (c *Controller) AddLoco(l *Locomotive) {
+func (c *Controller) AddLoco(l *locomotive.Locomotive) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 	c.locomotives[l.Name] = l
@@ -85,7 +116,7 @@ func (c *Controller) AddLoco(l *Locomotive) {
 
 // RmLoco removes a DCC device from the controller. There
 // will be no longer packets sent to it.
-func (c *Controller) RmLoco(l *Locomotive) {
+func (c *Controller) RmLoco(l *locomotive.Locomotive) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 	delete(c.locomotives, l.Name)
@@ -93,27 +124,29 @@ func (c *Controller) RmLoco(l *Locomotive) {
 
 // GetLoco retrieves a DCC device by its Name. The boolean is
 // true if the Locomotive was found.
-func (c *Controller) GetLoco(n string) (*Locomotive, bool) {
+func (c *Controller) GetLoco(n string) (*locomotive.Locomotive, bool) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
 	l, ok := c.locomotives[n]
+
 	return l, ok
 }
 
 // Locos returns a list of all registered Locomotives.
-func (c *Controller) Locos() []*Locomotive {
+func (c *Controller) Locos() []*locomotive.Locomotive {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-	locos := make([]*Locomotive, 0, len(c.locomotives))
+	locos := make([]*locomotive.Locomotive, 0, len(c.locomotives))
 	for _, l := range c.locomotives {
 		locos = append(locos, l)
 	}
+
 	return locos
 }
 
 // Command allows to send a custom Packet to the tracks.
 // The packet will be sent CommandRepeat times.
-func (c *Controller) Command(p *Packet) {
+func (c *Controller) Command(p *packet.Packet) {
 	c.commandCh <- p
 }
 
@@ -140,8 +173,8 @@ func (c *Controller) IsStarted() bool {
 }
 
 func (c *Controller) run() {
-	idle := NewBroadcastIdlePacket(c.driver)
-	stop := NewBroadcastStopPacket(c.driver, Forward, false, true)
+	idle := packet.NewBroadcastIdlePacket(c.driver)
+	stop := packet.NewBroadcastStopPacket(c.driver, byte(locomotive.Forward), false, true)
 	for {
 		select {
 		case <-c.shutdownCh:
@@ -150,6 +183,7 @@ func (c *Controller) run() {
 			}
 			c.driver.TracksOff()
 			c.doneCh <- true
+
 			return
 		case p := <-c.commandCh:
 			for i := 0; i < CommandRepeat; i++ {
@@ -162,6 +196,7 @@ func (c *Controller) run() {
 				if len(c.locomotives) == 0 {
 					c.commandCh <- idle
 					c.mux.RUnlock()
+
 					break // from the select
 				}
 				for _, loco := range c.locomotives {
@@ -169,7 +204,7 @@ func (c *Controller) run() {
 						continue
 					}
 					for i := 0; i < CommandRepeat; i++ {
-						loco.sendPackets(c.driver)
+						loco.SendPackets(c.driver)
 					}
 				}
 				idle.Send()

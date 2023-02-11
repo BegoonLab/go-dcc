@@ -35,3 +35,4 @@ frontend/node_modules/*
 /.idea/webServers.xml
 
 /vendor
+/software/dccpi/storage/*.log

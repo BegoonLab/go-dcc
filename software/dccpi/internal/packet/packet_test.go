@@ -1,11 +1,11 @@
-package dcc
+package packet
 
 import (
 	"os"
 	"testing"
 	"time"
 
-	"github.com/hsanjuan/go-dcc/driver/dummy"
+	"github.com/alexbegoon/go-dcc/software/dccpi/internal/driver/dummy"
 )
 
 func TestSend(t *testing.T) {
@@ -17,7 +17,7 @@ func TestSend(t *testing.T) {
 	p := NewBroadcastIdlePacket(d)
 	d.TracksOn()
 	p.Send()
-	time.Sleep(1 * time.Second)
+	time.Sleep(1 * time.Second) // nolint:forbidigo
 	packetStr := dummy.GuessBuffer.String()
 	t.Log("Pckt: ", p.String())
 	t.Log("Sent: ", packetStr)
@@ -49,7 +49,7 @@ func TestIdlePacket(t *testing.T) {
 }
 
 func TestNewSpeedAndDirectionPacket(t *testing.T) {
-	p := NewSpeedAndDirectionPacket(&dummy.DCCDummy{}, 0xFF, 0xFF, Forward)
+	p := NewSpeedAndDirectionPacket(&dummy.DCCDummy{}, 0xFF, 0xFF, byte(1))
 	if p.String() != "11111111111111110011111110011111110000000001" {
 		t.Error("Bad speed and direction packet: ", p.String())
 	}
@@ -70,49 +70,49 @@ func TestNewBroadcastResetPacket(t *testing.T) {
 }
 
 func TestNewBroadcastStopPacket(t *testing.T) {
-	p := NewBroadcastStopPacket(&dummy.DCCDummy{}, Backward, true, false)
+	p := NewBroadcastStopPacket(&dummy.DCCDummy{}, byte(0), true, false)
 	if p.String() != "11111111111111110000000000010000000010000001" {
 		t.Error("Bad stop packet: ", p.String())
 	}
 }
 
 func TestCorrectSpeedPacketBits(t *testing.T) {
-	p := NewSpeedAndDirectionPacket(&dummy.DCCDummy{}, 0xFF, 0, Forward)
+	p := NewSpeedAndDirectionPacket(&dummy.DCCDummy{}, 0xFF, 0, byte(1))
 	if p.String() != "11111111111111110011111110011000000000111111" {
 		t.Error("Bad speed and direction packet: ", p.String())
 	}
 
-	p = NewSpeedAndDirectionPacket(&dummy.DCCDummy{}, 0xFF, 1, Forward)
+	p = NewSpeedAndDirectionPacket(&dummy.DCCDummy{}, 0xFF, 1, byte(1))
 	if p.String() != "11111111111111110011111110011100000000011111" {
 		t.Error("Bad speed and direction packet: ", p.String())
 	}
 
-	p = NewSpeedAndDirectionPacket(&dummy.DCCDummy{}, 0xFF, 2, Forward)
+	p = NewSpeedAndDirectionPacket(&dummy.DCCDummy{}, 0xFF, 2, byte(1))
 	if p.String() != "11111111111111110011111110011000010000111101" {
 		t.Error("Bad speed and direction packet: ", p.String())
 	}
 
-	p = NewSpeedAndDirectionPacket(&dummy.DCCDummy{}, 0xFF, 11, Forward)
+	p = NewSpeedAndDirectionPacket(&dummy.DCCDummy{}, 0xFF, 11, byte(1))
 	if p.String() != "11111111111111110011111110011101010000010101" {
 		t.Error("Bad speed and direction packet: ", p.String())
 	}
 
-	p = NewSpeedAndDirectionPacket(&dummy.DCCDummy{}, 0xFF, 13, Forward)
+	p = NewSpeedAndDirectionPacket(&dummy.DCCDummy{}, 0xFF, 13, byte(1))
 	if p.String() != "11111111111111110011111110011101100000010011" {
 		t.Error("Bad speed and direction packet: ", p.String())
 	}
 
-	p = NewSpeedAndDirectionPacket(&dummy.DCCDummy{}, 0xFF, 30, Forward)
+	p = NewSpeedAndDirectionPacket(&dummy.DCCDummy{}, 0xFF, 30, byte(1))
 	if p.String() != "11111111111111110011111110011011110000100001" {
 		t.Error("Bad speed and direction packet: ", p.String())
 	}
 
-	p = NewSpeedAndDirectionPacket(&dummy.DCCDummy{}, 0xFF, 31, Forward)
+	p = NewSpeedAndDirectionPacket(&dummy.DCCDummy{}, 0xFF, 31, byte(1))
 	if p.String() != "11111111111111110011111110011111110000000001" {
 		t.Error("Bad speed and direction packet: ", p.String())
 	}
 
-	p = NewSpeedAndDirectionPacket(&dummy.DCCDummy{}, 0xFF, 27, Forward)
+	p = NewSpeedAndDirectionPacket(&dummy.DCCDummy{}, 0xFF, 27, byte(1))
 	if p.String() != "11111111111111110011111110011111010000000101" {
 		t.Error("Bad speed and direction packet: ", p.String())
 	}

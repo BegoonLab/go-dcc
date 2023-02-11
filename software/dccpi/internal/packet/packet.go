@@ -1,31 +1,49 @@
-package dcc
+package packet
 
 import (
 	"time"
 )
 
 // DCC protocol-defined values for reference.
-const (
-	BitOnePartMinDuration  = 55 * time.Microsecond
-	BitOnePartMaxDuration  = 61 * time.Microsecond
-	BitZeroPartMinDuration = 95 * time.Microsecond
-	BitZeroPartMaxDuration = 9900 * time.Microsecond
-	PacketSeparationMin    = 5 * time.Millisecond
-	PacketSeparationMax    = 30 * time.Millisecond
-	PreambleBitsMin        = 14
-)
+// const (
+//	BitOnePartMinDuration  = 55 * time.Microsecond
+//	BitOnePartMaxDuration  = 61 * time.Microsecond
+//	BitZeroPartMinDuration = 95 * time.Microsecond
+//	BitZeroPartMaxDuration = 9900 * time.Microsecond
+//	PacketSeparationMin    = 5 * time.Millisecond
+//	PacketSeparationMax    = 30 * time.Millisecond
+//	PreambleBitsMin        = 14
+//)
 
 // Some customizable DCC-related variables.
 var (
 	BitOnePartDuration  = 55 * time.Microsecond
 	BitZeroPartDuration = 100 * time.Microsecond
-	PacketSeparation    = 15 * time.Millisecond
+	Separation          = 15 * time.Millisecond
 	PreambleBits        = 16
 )
 
 // HeadlightCompatMode controls if one bit in the speed instruction is
 // reserved for headlight. This reduces speed steps from 32 to 16 steps.
 const HeadlightCompatMode = false
+
+// Driver can be implemented by any module to allow using go-dcc
+// on different platforms. dcc.Driver modules are in charge of
+// producing an electrical signal output (i.e. on a GPIO Pin)
+type Driver interface {
+	// Low sets the output to low state.
+	Low()
+	// High sets the output to high.
+	High()
+	// TracksOn turns the tracks on. The exact procedure is left to the
+	// implementation, but tracks should be ready to receive packets from
+	// this point.
+	TracksOn()
+	// TracksOff disables the tracks. The exact procedure is left to the
+	// implementation, but tracks should not carry any power and all
+	// trains should stop after calling it.
+	TracksOff()
+}
 
 // Packet represents the unit of information that can be sent to the DCC
 // devices in the system. Packet implements the DCC protocol for converting
@@ -46,7 +64,7 @@ type Packet struct {
 func NewPacket(d Driver, addr byte, data []byte) *Packet {
 	ecc := addr
 	for _, i := range data {
-		ecc = ecc ^ i
+		ecc ^= i
 	}
 
 	return &Packet{
@@ -61,22 +79,26 @@ func NewPacket(d Driver, addr byte, data []byte) *Packet {
 // Baseline packets are different because they use a 128 address
 // space. Therefore the address is forced to start with bit 0.
 func NewBaselinePacket(d Driver, addr byte, data []byte) *Packet {
-	addr = addr & 0x7F // 0b01111111 last 7 bits
+	addr &= 0x7F // 0b01111111 last 7 bits
+
 	return NewPacket(d, addr, data)
 }
 
 // NewSpeedAndDirectionPacket returns a new baseline DCC packet with speed and
 // direction information.
-func NewSpeedAndDirectionPacket(d Driver, addr byte, speed byte, dir Direction) *Packet {
-	addr = addr & 0x7F // 0b 0111 1111
+func NewSpeedAndDirectionPacket(d Driver, addr byte, speed byte, dir byte) *Packet {
+	addr &= 0x7F // 0b 0111 1111
 	if HeadlightCompatMode {
-		speed = speed & 0x0F // 4 lower bytes
+		// 4 lower bytes
+		speed &= 0x0F
 	} else {
-		speed = (speed << 7 >> 3) | (speed >> 1) // 5 lower bytes
+		// 5 lower bytes
+		speed = (speed << 7 >> 3) | (speed >> 1) // nolint:gomnd
 	}
 
-	dirB := byte(0x1&dir) << 5
-	data := (1 << 6) | dirB | speed // 0b01DCSSSS
+	dirB := 0x1 & dir << 5 // nolint:gomnd
+	// 0b01DCSSSS
+	data := (1 << 6) | dirB | speed // nolint:gomnd
 
 	return &Packet{
 		driver:  d,
@@ -89,24 +111,25 @@ func NewSpeedAndDirectionPacket(d Driver, addr byte, speed byte, dir Direction) 
 // NewFunctionGroupOnePacket returns an advanced DCC packet which allows to
 // control FL,F1-F4 functions. FL is usually associated to the headlights.
 func NewFunctionGroupOnePacket(d Driver, addr byte, fl, fl1, fl2, fl3, fl4 bool) *Packet {
-	var data, fln, fl1n, fl2n, fl3n, fl4n byte = 0, 0, 0, 0, 0, 0
+	var data byte
+	var fln, fl1n, fl2n, fl3n, fl4n byte = 0, 0, 0, 0, 0
 	if fl {
-		fln = 1 << 4
+		fln = 1 << 4 // nolint:gomnd
 	}
 	if fl1 {
 		fl1n = 1
 	}
 	if fl2 {
-		fl2n = 1 << 1
+		fl2n = 1 << 1 // nolint:gomnd
 	}
 	if fl3 {
-		fl3n = 1 << 2
+		fl3n = 1 << 2 // nolint:gomnd
 	}
 	if fl4 {
-		fl4n = 1 << 3
+		fl4n = 1 << 3 // nolint:gomnd
 	}
 
-	data = (1 << 7) | fln | fl1n | fl2n | fl3n | fl4n
+	data = (1 << 7) | fln | fl1n | fl2n | fl3n | fl4n // nolint:gomnd
 
 	return &Packet{
 		driver:  d,
@@ -119,23 +142,23 @@ func NewFunctionGroupOnePacket(d Driver, addr byte, fl, fl1, fl2, fl3, fl4 bool)
 // NewFunctionGroupTwoPacket returns two advanced DCC packet which allows to
 // control F5-F12 functions.
 func NewFunctionGroupTwoPacket(d Driver, addr byte, f5, f6, f7, f8, f9, f10, f11, f12 bool) (*Packet, *Packet) {
-
-	var data0, data1, f5n, f6n, f7n, f8n, f9n, f10n, f11n, f12n byte = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	var data0, data1 byte
+	var f5n, f6n, f7n, f8n, f9n, f10n, f11n, f12n byte = 0, 0, 0, 0, 0, 0, 0, 0
 
 	if f5 {
 		f5n = 1
 	}
 
 	if f6 {
-		f6n = 1 << 1
+		f6n = 1 << 1 // nolint:gomnd
 	}
 
 	if f7 {
-		f7n = 1 << 2
+		f7n = 1 << 2 // nolint:gomnd
 	}
 
 	if f8 {
-		f8n = 1 << 3
+		f8n = 1 << 3 // nolint:gomnd
 	}
 
 	if f9 {
@@ -143,19 +166,19 @@ func NewFunctionGroupTwoPacket(d Driver, addr byte, f5, f6, f7, f8, f9, f10, f11
 	}
 
 	if f10 {
-		f10n = 1 << 1
+		f10n = 1 << 1 // nolint:gomnd
 	}
 
 	if f11 {
-		f11n = 1 << 2
+		f11n = 1 << 2 // nolint:gomnd
 	}
 
 	if f12 {
-		f12n = 1 << 3
+		f12n = 1 << 3 // nolint:gomnd
 	}
 
-	data0 = (1 << 7) | (1 << 5) | (1 << 4) | f5n | f6n | f7n | f8n
-	data1 = (1 << 7) | (1 << 5) | f9n | f10n | f11n | f12n
+	data0 = (1 << 7) | (1 << 5) | (1 << 4) | f5n | f6n | f7n | f8n // nolint:gomnd
+	data1 = (1 << 7) | (1 << 5) | f9n | f10n | f11n | f12n         // nolint:gomnd
 
 	return &Packet{
 			driver:  d,
@@ -174,43 +197,43 @@ func NewFunctionGroupTwoPacket(d Driver, addr byte, f5, f6, f7, f8, f9, f10, f11
 // NewFunctionExpansionPacket returns two advanced 2-byte DCC packet which allows to
 // control F13-F28 functions.
 func NewFunctionExpansionPacket(d Driver, addr byte, f13, f14, f15, f16, f17, f18,
-	f19, f20, f21, f22, f23, f24, f25, f26, f27, f28 bool) (*Packet, *Packet) {
-
-	var dataA0, dataA1, dataB0, dataB1,
-		f13n, f14n, f15n, f16n, f17n, f18n,
+	f19, f20, f21, f22, f23, f24, f25, f26, f27, f28 bool,
+) (*Packet, *Packet) {
+	var dataA0, dataA1, dataB0, dataB1 byte
+	var f13n, f14n, f15n, f16n, f17n, f18n,
 		f19n, f20n, f21n, f22n, f23n,
-		f24n, f25n, f26n, f27n, f28n byte = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		f24n, f25n, f26n, f27n, f28n byte = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
 	if f13 {
 		f13n = 1
 	}
 
 	if f14 {
-		f14n = 1 << 1
+		f14n = 1 << 1 // nolint:gomnd
 	}
 
 	if f15 {
-		f15n = 1 << 2
+		f15n = 1 << 2 // nolint:gomnd
 	}
 
 	if f16 {
-		f16n = 1 << 3
+		f16n = 1 << 3 // nolint:gomnd
 	}
 
 	if f17 {
-		f17n = 1 << 4
+		f17n = 1 << 4 // nolint:gomnd
 	}
 
 	if f18 {
-		f18n = 1 << 5
+		f18n = 1 << 5 // nolint:gomnd
 	}
 
 	if f19 {
-		f19n = 1 << 6
+		f19n = 1 << 6 // nolint:gomnd
 	}
 
 	if f20 {
-		f20n = 1 << 7
+		f20n = 1 << 7 // nolint:gomnd
 	}
 
 	if f21 {
@@ -218,31 +241,31 @@ func NewFunctionExpansionPacket(d Driver, addr byte, f13, f14, f15, f16, f17, f1
 	}
 
 	if f22 {
-		f22n = 1 << 1
+		f22n = 1 << 1 // nolint:gomnd
 	}
 
 	if f23 {
-		f23n = 1 << 2
+		f23n = 1 << 2 // nolint:gomnd
 	}
 
 	if f24 {
-		f24n = 1 << 3
+		f24n = 1 << 3 // nolint:gomnd
 	}
 
 	if f25 {
-		f25n = 1 << 4
+		f25n = 1 << 4 // nolint:gomnd
 	}
 
 	if f26 {
-		f26n = 1 << 5
+		f26n = 1 << 5 // nolint:gomnd
 	}
 
 	if f27 {
-		f27n = 1 << 6
+		f27n = 1 << 6 // nolint:gomnd
 	}
 
 	if f28 {
-		f28n = 1 << 7
+		f28n = 1 << 7 // nolint:gomnd
 	}
 
 	dataA0 = 0b11011110
@@ -273,7 +296,7 @@ func NewBroadcastResetPacket(d Driver) *Packet {
 		driver:  d,
 		address: 0,
 		data:    []byte{0},
-		ecc:     0 ^ 0,
+		ecc:     0,
 	}
 }
 
@@ -282,34 +305,34 @@ func NewBroadcastResetPacket(d Driver) *Packet {
 func NewBroadcastIdlePacket(d Driver) *Packet {
 	return &Packet{
 		driver:  d,
-		address: 0xFF,
+		address: 0xFF, // nolint:gomnd
 		data:    []byte{0},
-		ecc:     0xFF ^ 0,
+		ecc:     0xFF, // nolint:gomnd
 	}
 }
 
 // NewBroadcastStopPacket returns a new broadcast baseline DCC packet which
 // tells the decoders to stop all locomotives. If softStop is false, an
 // emergency stop will happen by cutting power off the engine.
-func NewBroadcastStopPacket(d Driver, dir Direction, softStop bool, ignoreDir bool) *Packet {
+func NewBroadcastStopPacket(d Driver, dir byte, softStop bool, ignoreDir bool) *Packet {
 	var speed byte
 	if !softStop {
 		speed = 1
 	}
 
 	if ignoreDir {
-		speed = speed | (1 << 4)
+		speed |= 1 << 4 // nolint:gomnd
 	}
 
-	dirB := 0x1 & byte(dir)
+	dirB := 0x1 & dir // nolint:gomnd
 
-	data := (1 << 6) | (dirB << 5) | speed
+	data := (1 << 6) | (dirB << 5) | speed // nolint:gomnd
 
 	return &Packet{
 		driver:  d,
-		address: 0x0,
+		address: 0x0, // nolint:gomnd
 		data:    []byte{data},
-		ecc:     0x0 ^ data,
+		ecc:     0x0 ^ data, // nolint:gomnd
 	}
 }
 
@@ -326,11 +349,11 @@ func delayPoll(now time.Time, d time.Duration) {
 }
 
 // PacketPause performs a pause by sleeping
-// during the PacketSeparation time.
+// during the Separation time.
 func (p *Packet) PacketPause() {
 	// Not really needed
 	p.driver.Low()
-	time.Sleep(PacketSeparation)
+	time.Sleep(Separation) // nolint:forbidigo
 	p.driver.High()
 }
 
@@ -359,15 +382,16 @@ func (p *Packet) Send() {
 func (p *Packet) Length() int {
 	l := 0
 	l += PreambleBits // Preamble
-	l += 1            // Packet start
+	l++               // Packet start
 	l += 8            // Address byte
 	for i := 0; i < len(p.data); i++ {
-		l += 1 // Data start
+		l++    // Data start
 		l += 8 // Data byte
 	}
-	l += 1 // ECC start
+	l++    // ECC start
 	l += 8 // ECC byte
-	l += 1 // Packet end
+	l++    // Packet end
+
 	return l
 }
 
@@ -376,15 +400,16 @@ func (p *Packet) build() {
 	enc := make([]time.Duration, 0, p.Length())
 
 	unpackByte := func(b byte) []time.Duration {
-		bs := make([]time.Duration, 8, 8)
+		bs := make([]time.Duration, 8) // nolint:gomnd
 		for i := uint8(0); i < 8; i++ {
-			bit := (b >> (7 - i)) & 0x1
+			bit := (b >> (7 - i)) & 0x1 // nolint:gomnd
 			if bit == 0 {
 				bs[i] = BitZeroPartDuration
 			} else {
 				bs[i] = BitOnePartDuration
 			}
 		}
+
 		return bs
 	}
 
@@ -421,13 +446,15 @@ func (p *Packet) String() string {
 	}
 	var str string
 	for _, b := range p.encoded {
-		if b == BitZeroPartDuration {
+		switch {
+		case b == BitZeroPartDuration:
 			str += "0"
-		} else if b == BitOnePartDuration {
+		case b == BitOnePartDuration:
 			str += "1"
-		} else {
+		default:
 			panic("bad encoding")
 		}
 	}
+
 	return str
 }

@@ -1,19 +1,21 @@
-package dcc
+package config
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"log"
+	"os"
+
+	"github.com/alexbegoon/go-dcc/software/dccpi/internal/locomotive"
 )
 
 // Config allows to store configuration settings to initialize go-dcc.
 type Config struct {
-	Locomotives []*Locomotive `json:"locomotives"`
+	Locomotives []*locomotive.Locomotive `json:"locomotives"`
 }
 
 // LoadConfig parses a configuration file and returns a Config object.
 func LoadConfig(path string) (*Config, error) {
-	conf, err := ioutil.ReadFile(path)
+	conf, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -23,6 +25,7 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, err
 	}
 	log.Printf("Loaded configuration for %d locomotive(s)", len(cfg.Locomotives))
+
 	return &cfg, nil
 }
 
@@ -31,6 +34,7 @@ func (c *Config) Save(path string) error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(path, pretty, 0644)
+	err = os.WriteFile(path, pretty, 0o600) // nolint:gomnd
+
 	return err
 }

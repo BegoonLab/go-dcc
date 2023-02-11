@@ -1,8 +1,10 @@
-package dcc
+package locomotive
 
 import (
 	"fmt"
 	"sync"
+
+	"github.com/alexbegoon/go-dcc/software/dccpi/internal/packet"
 )
 
 // Direction constants.
@@ -10,6 +12,24 @@ const (
 	Backward Direction = 0
 	Forward  Direction = 1
 )
+
+// Driver can be implemented by any module to allow using go-dcc
+// on different platforms. dcc.Driver modules are in charge of
+// producing an electrical signal output (i.e. on a GPIO Pin)
+type Driver interface {
+	// Low sets the output to low state.
+	Low()
+	// High sets the output to high.
+	High()
+	// TracksOn turns the tracks on. The exact procedure is left to the
+	// implementation, but tracks should be ready to receive packets from
+	// this point.
+	TracksOn()
+	// TracksOff disables the tracks. The exact procedure is left to the
+	// implementation, but tracks should not carry any power and all
+	// trains should stop after calling it.
+	TracksOff()
+}
 
 // Direction represents the locomotive direction and can be
 // Forward or Backward.
@@ -58,22 +78,23 @@ type Locomotive struct {
 
 	mux sync.Mutex
 
-	speedPacket *Packet
-	flPacket    *Packet
+	speedPacket *packet.Packet
+	flPacket    *packet.Packet
 
 	sendGroupTwo     bool
-	fGroupTwoPacket0 *Packet
-	fGroupTwoPacket1 *Packet
+	fGroupTwoPacket0 *packet.Packet
+	fGroupTwoPacket1 *packet.Packet
 
 	sendExpansion0    bool
-	fExpansionPacket0 *Packet
+	fExpansionPacket0 *packet.Packet
 
 	sendExpansion1    bool
-	fExpansionPacket1 *Packet
+	fExpansionPacket1 *packet.Packet
 }
 
 func (l *Locomotive) String() string {
-	var dir, fl, f1, f2, f3, f4 string = "", "off", "off", "off", "off", "off"
+	var dir string
+	fl, f1, f2, f3, f4 := "off", "off", "off", "off", "off"
 	if l.Direction == Forward {
 		dir = ">"
 	} else {
@@ -94,6 +115,7 @@ func (l *Locomotive) String() string {
 	if l.F4 {
 		f4 = "on"
 	}
+
 	return fmt.Sprintf("%s:%d |%d%s| |%s| |%s|%s|%s|%s|",
 		l.Name,
 		l.Address,
@@ -106,7 +128,7 @@ func (l *Locomotive) String() string {
 		f4)
 }
 
-func (l *Locomotive) sendPackets(d Driver) {
+func (l *Locomotive) SendPackets(d Driver) {
 	l.mux.Lock()
 	{
 		if !l.sendGroupTwo {
@@ -119,19 +141,19 @@ func (l *Locomotive) sendPackets(d Driver) {
 			l.sendExpansion1 = l.F21 || l.F22 || l.F23 || l.F24 || l.F25 || l.F26 || l.F27 || l.F28
 		}
 		if l.speedPacket == nil {
-			l.speedPacket = NewSpeedAndDirectionPacket(d,
-				l.Address, l.Speed, l.Direction)
+			l.speedPacket = packet.NewSpeedAndDirectionPacket(d,
+				l.Address, l.Speed, byte(l.Direction))
 		}
 		if l.flPacket == nil {
-			l.flPacket = NewFunctionGroupOnePacket(d,
+			l.flPacket = packet.NewFunctionGroupOnePacket(d,
 				l.Address, l.Fl, l.F1, l.F2, l.F3, l.F4)
 		}
 		if l.fGroupTwoPacket0 == nil {
-			l.fGroupTwoPacket0, l.fGroupTwoPacket1 = NewFunctionGroupTwoPacket(d,
+			l.fGroupTwoPacket0, l.fGroupTwoPacket1 = packet.NewFunctionGroupTwoPacket(d,
 				l.Address, l.F5, l.F6, l.F7, l.F8, l.F9, l.F10, l.F11, l.F12)
 		}
 		if l.fExpansionPacket0 == nil {
-			l.fExpansionPacket0, l.fExpansionPacket1 = NewFunctionExpansionPacket(d,
+			l.fExpansionPacket0, l.fExpansionPacket1 = packet.NewFunctionExpansionPacket(d,
 				l.Address, l.F13, l.F14, l.F15, l.F16, l.F17, l.F18, l.F19, l.F20,
 				l.F21, l.F22, l.F23, l.F24, l.F25, l.F26, l.F27, l.F28)
 		}
@@ -153,7 +175,7 @@ func (l *Locomotive) sendPackets(d Driver) {
 
 // Apply makes any changes to the Locomotive's properties
 // to be reflected in the packets generated for it and,
-// therefore, alter the behaviour of the device on the tracks.
+// therefore, alter the behavior of the device on the tracks.
 func (l *Locomotive) Apply() {
 	l.mux.Lock()
 	{
