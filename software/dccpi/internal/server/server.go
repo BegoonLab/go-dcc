@@ -30,7 +30,7 @@ func Serve(c *controller.Controller) *http.Server {
 		ServeWs(wsServer, w, r)
 	})
 
-	fs := http.FileServer(http.Dir("../../../frontend/public"))
+	fs := http.FileServer(http.Dir("../../frontend/public"))
 	http.Handle("/", fs)
 
 	server := &http.Server{
