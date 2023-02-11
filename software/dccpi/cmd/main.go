@@ -8,6 +8,8 @@ package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -29,6 +31,8 @@ var (
 	signalPinFlag uint
 	brakePinFlag  uint
 )
+
+var DefaultConfigPath = "../conf/initial.json"
 
 // Driver can be implemented by any module to allow using go-dcc
 // on different platforms. dcc.Driver modules are in charge of
@@ -54,6 +58,25 @@ type repl struct {
 	ctrl     *controller.Controller
 	driver   Driver
 	log      *zap.Logger
+}
+
+func init() {
+	//usr, _ := user.Current()
+	//DefaultConfigPath = filepath.Join(usr.HomeDir, ".dccpi")
+	flag.Usage = func() {
+		fmt.Fprint(os.Stdout, "Usage: dccpi [options]")
+		fmt.Fprint(os.Stdout, "Options:")
+		flag.PrintDefaults()
+
+	}
+
+	flag.StringVar(&configFlag, "config", DefaultConfigPath,
+		"location of a dccpi configuration file")
+	flag.UintVar(&signalPinFlag, "signalPin", uint(dccpi.SignalGPIO),
+		"GPIO Pin to use for the DCC signal")
+	flag.UintVar(&brakePinFlag, "brakePin", uint(dccpi.BrakeGPIO),
+		"GPIO Pin to use for the Brake signal (cuts power from tracks")
+	flag.Parse()
 }
 
 func main() {
@@ -89,7 +112,7 @@ func main() {
 		log:      l,
 	}
 
-	signal.Notify(r.signalCh, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(r.signalCh, os.Interrupt, syscall.SIGTERM, syscall.SIGSTOP)
 
 	go func() {
 		<-r.signalCh
