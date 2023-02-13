@@ -1,0 +1,14 @@
+version: '3.9'
+services:
+  vue-ui:
+    build: 
+      context: ./software/frontend
+    ports:
+      - "8080:8080"
+    container_name: vue-ui
+    working_dir: /var/www/app
+    user: node
+    volumes:
+       - ./software/frontend:/var/www/app
+       - ./software/frontend/public:/var/www/build
+    command: "npm run dev"

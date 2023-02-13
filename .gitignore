@@ -24,3 +24,17 @@ _testmain.go
 *.exe
 *.test
 *.prof
+.vscode/*
+frontend/node_modules/*
+software/frontend/node_modules/*
+/.idea/deployment.xml
+/.idea/go-dcc.iml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/sshConfigs.xml
+/.idea/vcs.xml
+/.idea/webServers.xml
+
+/vendor
+/software/dccpi/storage/*.log
+software/dccpi/cmd/main

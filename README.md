@@ -1,7 +1,7 @@
 go-dcc
 ======
 
-[![GoDoc](https://godoc.org/github.com/hsanjuan/go-dcc?status.svg)](http://godoc.org/github.com/hsanjuan/go-dcc)
+[![GoDoc](https://godoc.org/github.com/alexbegoon/go-dcc?status.svg)](http://godoc.org/github.com/alexbegoon/go-dcc)
 [![Build Status](https://travis-ci.org/hsanjuan/go-dcc.svg?branch=master)](https://travis-ci.org/hsanjuan/go-dcc)
 [![codecov](https://codecov.io/gh/hsanjuan/go-dcc/branch/master/graph/badge.svg)](https://codecov.io/gh/hsanjuan/go-dcc)
 
@@ -37,7 +37,7 @@ Features
 
 `go-dcc` is aims to to provide a minimal feature set to control DCC-based locomotives. Although the original aim is to support Raspberry Pi as a Command Station, it can easily incorporate drivers for other platforms and be integrated in projects with larger scope. It is not a support-all, complex, multi-protocol, ui-included, buy-my-hardware solution. For this, there are better solutions like [RocRail](http://wiki.rocrail.net/doku.php), [JMRI](http://jmri.sourceforge.net/), [SPROG](http://www.sprog-dcc.co.uk/), [GertBot](http://www.gertbot.com/) etc.
 
-`go-dcc` is inspired in `dccpi`(https://github.com/hsanjuan/dccpi), a Python library of similar characteristics. Go has the advantage that it requires no C dependencies, it is faster and less prone to errors. Some of the features supported are:
+`go-dcc` is inspired in `dccpi`(https://github.com/alexbegoon/dccpi), a Python library of similar characteristics. Go has the advantage that it requires no C dependencies, it is faster and less prone to errors. Some of the features supported are:
 
   * Easy to build and install (using `go get` or simply downloading the binaries)
   * Easy to adapt to new platforms
@@ -93,13 +93,13 @@ Installation
 To build/install:
 
 ```go
-> git clone https://github.com/hsanjuan/go-dcc
-> cd go-dcc/dccpi
-> go install
+make build-server
 ```
 
-and the `dccpi` application will be installed in your `$GOPATH/bin` folder.
-
+Autostart from cronjob
+```bash
+@reboot cd /home/pi/Work/go-dcc/dccpi/ && sleep 15 && ./dccpi --config=./initial.json
+```
 
 Running
 -------
@@ -167,11 +167,11 @@ This will allow to send packets to the three defined DCC devices directly withou
 
 ### Go Library Documentation
 
-The Go documentation is maintained with GoDoc. See: https://godoc.org/github.com/hsanjuan/go-dcc .
+The Go documentation is maintained with GoDoc. See: https://godoc.org/github.com/alexbegoon/go-dcc .
 
 #### Additional drivers
 
-Additional drivers for `go-dcc` must implement the [`dcc.Driver` interface](https://godoc.org/github.com/hsanjuan/go-dcc#Driver).
+Additional drivers for `go-dcc` must implement the [`dcc.Driver` interface](https://godoc.org/github.com/alexbegoon/go-dcc#Driver).
 
 Questions and contributions
 ---------------------------
