@@ -21,6 +21,7 @@ var (
 func Serve(c *controller.Controller) *http.Server {
 	wsServer = NewWebsocketServer(c.Log)
 	log.Println("Listening on :3000...")
+	c.Log.Info("Listening on :3000...")
 	ctrl = c
 	ctrl.Stop()
 	go wsServer.Run()
