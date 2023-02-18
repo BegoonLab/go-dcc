@@ -1,0 +1,27 @@
+Drill report for railway.kicad_pcb
+Created on Wed 15 Feb 2023 12:29:06 PM CET
+
+Copper Layer Stackup:
+    =============================================================
+    L1 :  F.Cu                      front
+    L2 :  B.Cu                      back
+
+
+Drill file 'railway-PTH.drl' contains
+    plated through holes:
+    =============================================================
+    T1  0.400mm  0.0157"  (130 holes)
+    T2  0.500mm  0.0197"  (128 holes)
+    T3  0.800mm  0.0315"  (54 holes)
+    T4  1.000mm  0.0394"  (123 holes)
+    T5  2.500mm  0.0984"  (16 holes)
+
+    Total plated holes count 451
+
+
+Drill file 'railway-NPTH.drl' contains
+    unplated through holes:
+    =============================================================
+    T1  2.600mm  0.1024"  (8 holes)
+
+    Total unplated holes count 8
