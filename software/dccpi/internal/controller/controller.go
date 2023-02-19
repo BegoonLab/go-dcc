@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"sync"
 
+	"github.com/alexbegoon/go-dcc/software/dccpi/internal/pb/build/go/controller"
+	"google.golang.org/protobuf/proto"
+
 	"go.uber.org/zap"
 
 	"github.com/alexbegoon/go-dcc/software/dccpi/internal/config"
@@ -74,6 +77,8 @@ func NewController(d Driver) *Controller {
 	}
 }
 
+// ToJSON
+// Deprecated: use ToProto
 func (c *Controller) ToJSON() []byte {
 	cj := ControllerJSON{
 		Locomotives: c.locomotives,
@@ -86,6 +91,63 @@ func (c *Controller) ToJSON() []byte {
 	}
 
 	return d
+}
+
+func (c *Controller) ToProto() []byte {
+	locos := make(map[string]*controller.Locomotive, len(c.locomotives))
+
+	for _, l := range c.locomotives {
+		locos[l.Name] = &controller.Locomotive{
+			Name:      l.Name,
+			Address:   uint32(l.Address),
+			Speed:     uint32(l.Speed),
+			Direction: controller.Locomotive_Direction(l.Direction),
+			Enabled:   l.Enabled,
+			Fl:        l.Fl,
+			F1:        l.F1,
+			F2:        l.F2,
+			F3:        l.F3,
+			F4:        l.F4,
+			F5:        l.F5,
+			F6:        l.F6,
+			F7:        l.F7,
+			F8:        l.F8,
+			F9:        l.F9,
+			F10:       l.F10,
+			F11:       l.F11,
+			F12:       l.F12,
+			F13:       l.F13,
+			F14:       l.F14,
+			F15:       l.F15,
+			F16:       l.F16,
+			F17:       l.F17,
+			F18:       l.F18,
+			F19:       l.F19,
+			F20:       l.F20,
+			F21:       l.F21,
+			F22:       l.F22,
+			F23:       l.F23,
+			F24:       l.F24,
+			F25:       l.F25,
+			F26:       l.F26,
+			F27:       l.F27,
+			F28:       l.F28,
+		}
+	}
+
+	msg := &controller.Controller{
+		Locomotives: locos,
+		Started:     c.IsStarted(),
+		Reboot:      false,
+		Poweroff:    false,
+	}
+
+	data, err := proto.Marshal(msg)
+	if err != nil {
+		c.Log.Error("Cannot marshal protobuf", zap.Error(err))
+	}
+
+	return data
 }
 
 // NewControllerWithConfig builds a new Controller using the

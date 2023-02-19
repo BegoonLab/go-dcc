@@ -61,13 +61,11 @@ type repl struct {
 }
 
 func init() {
-	//usr, _ := user.Current()
-	//DefaultConfigPath = filepath.Join(usr.HomeDir, ".dccpi")
+	// DefaultConfigPath = filepath.Join(usr.HomeDir, ".dccpi")
 	flag.Usage = func() {
 		fmt.Fprint(os.Stdout, "Usage: dccpi [options]")
 		fmt.Fprint(os.Stdout, "Options:")
 		flag.PrintDefaults()
-
 	}
 
 	flag.StringVar(&configFlag, "config", DefaultConfigPath,
@@ -113,7 +111,7 @@ func main() {
 		log:      l,
 	}
 
-	signal.Notify(r.signalCh, os.Interrupt, syscall.SIGTERM, syscall.SIGSTOP)
+	signal.Notify(r.signalCh, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
 		<-r.signalCh

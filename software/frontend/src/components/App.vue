@@ -22,16 +22,17 @@
       </v-row>
     </v-overlay>
     <v-card class="overflow-hidden">
-      <v-app-bar app dense fixed dark flat>
+      <v-app-bar
+           color="deep-purple-darken-1"
+           density="compact"
+      >
         <v-app-bar-nav-icon @click="drawer = true"></v-app-bar-nav-icon>
 
         <v-toolbar-title>Train Commander</v-toolbar-title>
 
-        <v-spacer></v-spacer>
-
         <v-btn
-            depressed
-            color="error"
+            variant="flat"
+            color="red-accent-2"
             :disabled="!started"
             @click="
             () => {
@@ -43,8 +44,8 @@
         </v-btn>
 
         <template v-slot:extension>
-          <v-tabs v-model="tab" align-with-title>
-            <v-tab v-for="item in getEnabledLocomotives" :key="item.address">
+          <v-tabs v-model="tab" align-with-title show-arrows>
+            <v-tab v-for="item in ordered(getEnabledLocomotives)" :key="item.address" :value="item.name" :append-icon="item.speed > 0 ? (item.direction === 1 ? 'mdi-arrow-right-bold' : 'mdi-arrow-left-bold' ) : 'mdi-alert-octagon'">
               {{ item.name }}
             </v-tab>
           </v-tabs>
@@ -58,8 +59,9 @@
         <v-container fluid class="px-0 py-10 overflow-x-hidden">
           <v-window v-model="tab" class="px-0 py-15">
             <v-window-item
-                v-for="item in getEnabledLocomotives"
+                v-for="item in ordered(getEnabledLocomotives)"
                 :key="item.address"
+                :value="item.name"
             >
               <v-row :justify="'center'">
                 <v-col md="4" sm="12" xs="12">
@@ -69,25 +71,37 @@
             </v-window-item>
           </v-window>
           <v-navigation-drawer v-model="drawer" absolute temporary>
-            <v-list nav dense>
-                <v-list-item v-if="locomotives && Object.keys(locomotives).length > 0" v-for="item in locomotives" :key="item.address" append-icon="mdi-tram">
-                  <v-list-item-action>
-                    <v-switch
-                        :color="'green'"
-                        :true-value="true"
-                        :false-value="false"
-                        v-model="item.enabled"
-                        @change="(e) => update()"
-                    ></v-switch>
-                  </v-list-item-action>
-                  <v-list-item-title>{{ item.name }}</v-list-item-title>
-                </v-list-item>
-                <v-list-item @click="reboot" append-icon="mdi-restart">
-                  <v-list-item-title>Reboot</v-list-item-title>
-                </v-list-item>
-                <v-list-item @click="poweroff" append-icon="mdi-power">
-                  <v-list-item-title>Shutdown</v-list-item-title>
-                </v-list-item>
+            <v-list density="compact">
+              <v-list-subheader>TRAINS</v-list-subheader>
+              <v-list-item density="compact" v-if="locomotives && Object.keys(locomotives).length > 0" v-for="item in ordered(locomotives)" :key="item.address">
+                <template v-slot:title>
+                  <v-row>
+                    <v-col cols="2" class="my-2">
+                      <v-icon icon="mdi-tram"></v-icon>
+                    </v-col>
+                    <v-col cols="6" class="my-2">
+                      {{ item.name }}
+                    </v-col>
+                    <v-col cols="4" class="mr-0">
+                      <v-switch
+                          density="compact"
+                          :color="'green'"
+                          :true-value="true"
+                          :false-value="false"
+                          v-model="item.enabled"
+                          @change="(e) => {update(); item.enabled ? tab=item.name : (Object.keys(getEnabledLocomotives).length > 0 ? tab=Object.values(getEnabledLocomotives)[0].name : tab=null);}"
+                      ></v-switch>
+                    </v-col>
+                  </v-row>
+                </template>
+              </v-list-item>
+              <v-list-subheader>SYSTEM MANAGER</v-list-subheader>
+              <v-list-item density="compact" @click="reboot" append-icon="mdi-restart">
+                <v-list-item-title>Reboot</v-list-item-title>
+              </v-list-item>
+              <v-list-item density="compact" @click="poweroff" append-icon="mdi-power">
+                <v-list-item-title>Shutdown</v-list-item-title>
+              </v-list-item>
             </v-list>
           </v-navigation-drawer>
           <v-row
@@ -166,5 +180,15 @@ function poweroff() {
 
 function update() {
   controller.sendDataToServer()
+}
+
+function ordered (unordered) {
+  return Object.keys(unordered).sort().reduce(
+      (obj, key) => {
+        obj[key] = unordered[key];
+        return obj;
+      },
+      {}
+  );
 }
 </script>

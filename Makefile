@@ -12,3 +12,5 @@ bash:
 lint-go:
 	@golangci-lint run --fix --config .golangci.yml
 
+compile-protobuf-go:
+	protoc -I=./software/frontend/src/pb --go_out=./software/dccpi/internal/pb/build ./software/frontend/src/pb/controller.proto

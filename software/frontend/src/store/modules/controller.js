@@ -25,7 +25,6 @@ export const useControllerStore = defineStore('controller', () => {
             'started': started.value,
             'reboot': reboot.value,
             'poweroff': poweroff.value,
-            'connected': connected.value
         }
     }
 

@@ -4,16 +4,20 @@ import {useControllerStore} from "./controller";
 export const useWsStore = defineStore('ws', () => {
     let ws = {};
     let lastMsgTime = Date.now();
+    let ControllerType = {};
 
     function connectToWebsocket() {
+        const controllerStore = useControllerStore()
+        const pbRoot = require('./../../pb/controller.proto');
+        ControllerType = pbRoot.lookupType('controller.Controller')
         ws = new WebSocket(`ws://${location.hostname}:3000/ws`);
+        ws.binaryType = 'arraybuffer' // Important!
         ws.addEventListener('open', (event) => { onWebsocketOpen(event) });
         ws.addEventListener('message', (event) => { handleNewMessage(event) });
         ws.addEventListener('error', (event) => { handleError(event) });
 
         setInterval(() => {
             if (Date.now() - lastMsgTime > 5000) {
-                const controllerStore = useControllerStore()
                 console.log("Connection Error!");
                 controllerStore.setDisconnected();
             }
@@ -32,12 +36,12 @@ export const useWsStore = defineStore('ws', () => {
     }
     function handleNewMessage(event) {
         const controllerStore = useControllerStore()
-        let data = event.data;
-        data = data.split(/\r?\n/);
-        for (let i = 0; i < data.length; i++) {
-            let msg = JSON.parse(data[i]);
-            controllerStore.newMessage(msg)
-        }
+        let decoded = ControllerType.decode(new Uint8Array(event.data));
+        let data = ControllerType.toObject(decoded, {
+            arrays: true,
+            defaults: true,
+        });
+        controllerStore.newMessage(data)
         lastMsgTime = Date.now();
         controllerStore.setConnected()
     }
@@ -47,7 +51,9 @@ export const useWsStore = defineStore('ws', () => {
             console.log("Connection Error!");
             controllerStore.setDisconnected()
         }
-        ws.send(JSON.stringify(msg));
+
+        const buffer = ControllerType.encode(msg).finish();
+        ws.send(buffer);
     }
 
     return {

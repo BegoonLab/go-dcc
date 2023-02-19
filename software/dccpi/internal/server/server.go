@@ -1,11 +1,14 @@
 package server
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 	"syscall"
 	"time"
+
+	"github.com/alexbegoon/go-dcc/software/dccpi/internal/locomotive"
+	controller2 "github.com/alexbegoon/go-dcc/software/dccpi/internal/pb/build/go/controller"
+	"google.golang.org/protobuf/proto"
 
 	"go.uber.org/zap"
 
@@ -59,7 +62,7 @@ type WsServer struct {
 func sendState(ctrl *controller.Controller) {
 	for {
 		time.Sleep(3 * time.Second) // nolint:forbidigo,gomnd
-		wsServer.broadcastToClients(ctrl.ToJSON())
+		wsServer.broadcastToClients(ctrl.ToProto())
 	}
 }
 
@@ -160,7 +163,7 @@ func (client *Client) readPump() {
 
 	// Start endless read loop, waiting for messages from client
 	for {
-		_, jsonMessage, err := client.conn.ReadMessage()
+		_, binaryMessage, err := client.conn.ReadMessage()
 		if err != nil {
 			client.log.Error("Unable to Read Message", zap.Error(err))
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
@@ -170,22 +173,22 @@ func (client *Client) readPump() {
 			break
 		}
 
-		var cj *controller.ControllerJSON
+		var cProto controller2.Controller
 
-		err = json.Unmarshal(jsonMessage, &cj)
+		err = proto.Unmarshal(binaryMessage, &cProto)
 		if err != nil {
 			client.log.Error("Unable to Unmarshal", zap.Error(err))
 		}
 
-		if !cj.Started && ctrl.IsStarted() {
+		if !cProto.Started && ctrl.IsStarted() {
 			ctrl.Stop()
 		}
 
-		if cj.Started && !ctrl.IsStarted() {
+		if cProto.Started && !ctrl.IsStarted() {
 			ctrl.Start()
 		}
 
-		if cj.Reboot {
+		if cProto.Reboot {
 			log.Println("Rebooting the system...")
 
 			syscall.Sync()
@@ -195,7 +198,7 @@ func (client *Client) readPump() {
 			}
 		}
 
-		if cj.Poweroff {
+		if cProto.Poweroff {
 			client.log.Info("Shutdown the system...", zap.Error(err))
 
 			syscall.Sync()
@@ -206,43 +209,43 @@ func (client *Client) readPump() {
 		}
 
 		for _, loco := range ctrl.Locos() {
-			loco.Speed = cj.Locomotives[loco.Name].Speed
-			loco.Direction = cj.Locomotives[loco.Name].Direction
-			loco.Enabled = cj.Locomotives[loco.Name].Enabled
-			loco.Fl = cj.Locomotives[loco.Name].Fl
-			loco.F1 = cj.Locomotives[loco.Name].F1
-			loco.F2 = cj.Locomotives[loco.Name].F2
-			loco.F3 = cj.Locomotives[loco.Name].F3
-			loco.F4 = cj.Locomotives[loco.Name].F4
-			loco.F5 = cj.Locomotives[loco.Name].F5
-			loco.F6 = cj.Locomotives[loco.Name].F6
-			loco.F7 = cj.Locomotives[loco.Name].F7
-			loco.F8 = cj.Locomotives[loco.Name].F8
-			loco.F9 = cj.Locomotives[loco.Name].F9
-			loco.F10 = cj.Locomotives[loco.Name].F10
-			loco.F11 = cj.Locomotives[loco.Name].F11
-			loco.F12 = cj.Locomotives[loco.Name].F12
-			loco.F13 = cj.Locomotives[loco.Name].F13
-			loco.F14 = cj.Locomotives[loco.Name].F14
-			loco.F15 = cj.Locomotives[loco.Name].F15
-			loco.F16 = cj.Locomotives[loco.Name].F16
-			loco.F17 = cj.Locomotives[loco.Name].F17
-			loco.F18 = cj.Locomotives[loco.Name].F18
-			loco.F19 = cj.Locomotives[loco.Name].F19
-			loco.F20 = cj.Locomotives[loco.Name].F20
-			loco.F21 = cj.Locomotives[loco.Name].F21
-			loco.F22 = cj.Locomotives[loco.Name].F22
-			loco.F23 = cj.Locomotives[loco.Name].F23
-			loco.F24 = cj.Locomotives[loco.Name].F24
-			loco.F25 = cj.Locomotives[loco.Name].F25
-			loco.F26 = cj.Locomotives[loco.Name].F26
-			loco.F27 = cj.Locomotives[loco.Name].F27
-			loco.F28 = cj.Locomotives[loco.Name].F28
+			loco.Speed = uint8(cProto.Locomotives[loco.Name].Speed)
+			loco.Direction = locomotive.Direction(cProto.Locomotives[loco.Name].Direction)
+			loco.Enabled = cProto.Locomotives[loco.Name].Enabled
+			loco.Fl = cProto.Locomotives[loco.Name].Fl
+			loco.F1 = cProto.Locomotives[loco.Name].F1
+			loco.F2 = cProto.Locomotives[loco.Name].F2
+			loco.F3 = cProto.Locomotives[loco.Name].F3
+			loco.F4 = cProto.Locomotives[loco.Name].F4
+			loco.F5 = cProto.Locomotives[loco.Name].F5
+			loco.F6 = cProto.Locomotives[loco.Name].F6
+			loco.F7 = cProto.Locomotives[loco.Name].F7
+			loco.F8 = cProto.Locomotives[loco.Name].F8
+			loco.F9 = cProto.Locomotives[loco.Name].F9
+			loco.F10 = cProto.Locomotives[loco.Name].F10
+			loco.F11 = cProto.Locomotives[loco.Name].F11
+			loco.F12 = cProto.Locomotives[loco.Name].F12
+			loco.F13 = cProto.Locomotives[loco.Name].F13
+			loco.F14 = cProto.Locomotives[loco.Name].F14
+			loco.F15 = cProto.Locomotives[loco.Name].F15
+			loco.F16 = cProto.Locomotives[loco.Name].F16
+			loco.F17 = cProto.Locomotives[loco.Name].F17
+			loco.F18 = cProto.Locomotives[loco.Name].F18
+			loco.F19 = cProto.Locomotives[loco.Name].F19
+			loco.F20 = cProto.Locomotives[loco.Name].F20
+			loco.F21 = cProto.Locomotives[loco.Name].F21
+			loco.F22 = cProto.Locomotives[loco.Name].F22
+			loco.F23 = cProto.Locomotives[loco.Name].F23
+			loco.F24 = cProto.Locomotives[loco.Name].F24
+			loco.F25 = cProto.Locomotives[loco.Name].F25
+			loco.F26 = cProto.Locomotives[loco.Name].F26
+			loco.F27 = cProto.Locomotives[loco.Name].F27
+			loco.F28 = cProto.Locomotives[loco.Name].F28
 
 			loco.Apply()
 		}
 
-		client.wsServer.broadcast <- jsonMessage
+		client.wsServer.broadcast <- binaryMessage
 	}
 }
 
@@ -272,13 +275,13 @@ func (client *Client) writePump() {
 				return
 			}
 
-			w, err := client.conn.NextWriter(websocket.TextMessage)
+			w, err := client.conn.NextWriter(websocket.BinaryMessage)
 			if err != nil {
 				return
 			}
 			_, err = w.Write(message)
 			if err != nil {
-				client.log.Error("Unable to write", zap.Error(err))
+				client.log.Error("Unable to write Binary Message", zap.Error(err))
 			}
 
 			// Attach queued chat messages to the current websocket message.
