@@ -1,16 +1,29 @@
-import Vue from 'vue';
-import App from './components/App.vue';
-import Train from './components/Train.vue';
-import vuetify from './plugins/vuetify'
-import Vuex from 'vuex'
-import store from './store'
+import {createApp} from 'vue'
+import {createPinia} from 'pinia'
+import App from './components/App.vue'
+import Train from './components/Train.vue'
 
-Vue.use(Vuex)
-Vue.component('train', Train)
+// Vuetify
+import 'vuetify/styles'
+import './styles/styles.sass'
+import {createVuetify} from 'vuetify'
+import * as components from 'vuetify/components'
+import * as directives from 'vuetify/directives'
 
-new Vue({
-  vuetify,
-  store,
-  el: '#app',
-  render: h => h(App),
-});
+const vuetify = createVuetify({
+    components,
+    directives,
+})
+
+// Pinia
+const pinia = createPinia()
+
+// Create Vue App
+const app = createApp(App)
+
+app.use(vuetify)
+app.use(pinia)
+
+app.component('train', Train)
+
+app.mount('#app')

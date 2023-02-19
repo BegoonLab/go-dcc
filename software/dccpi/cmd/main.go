@@ -103,6 +103,7 @@ func main() {
 	}
 
 	ctrl := controller.NewControllerWithConfig(dpi, cfg)
+	ctrl.Log = l
 
 	r := &repl{
 		signalCh: make(chan os.Signal, 1),

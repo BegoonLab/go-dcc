@@ -1,4 +1,4 @@
-FROM node:17
+FROM node:19
 USER node
 WORKDIR /var/www/app
 COPY package*.json ./

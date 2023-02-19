@@ -1,100 +1,87 @@
-// initial state
-const state = () => ({
-    locomotives: {},
-    started: false,
-    reboot: false,
-    poweroff: false,
-    connected: false,
-})
+import {defineStore} from 'pinia'
+import {computed, ref, watch} from 'vue'
+import {useWsStore} from "./ws";
 
-// getters
-const getters = {
-    getLocomotives: (state, getters, rootState) => {
-        return state.locomotives ? state.locomotives : {}
-    },
-    getEnabledLocomotives: (state, getters, rootState) => {
+export const useControllerStore = defineStore('controller', () => {
+
+    const locomotives = ref({})
+    const started = ref(false)
+    const reboot = ref(false)
+    const poweroff = ref(false)
+    const connected = ref(false)
+    const getEnabledLocomotives = computed(() => {
         let enabledLocomotives = {}
-        Object.keys(state.locomotives).forEach(key => {
-            if (state.locomotives[key].enabled) {
-                enabledLocomotives[key] = state.locomotives[key]
+        Object.keys(locomotives.value).forEach(key => {
+            if (locomotives.value[key] && locomotives.value[key].enabled) {
+                enabledLocomotives[key] = locomotives.value[key]
             }
         })
         return enabledLocomotives
-    },
-}
+    })
 
-// actions
-const actions = {
-    newMessage({ commit, state }, message) {
-        commit('setData', { data: message })
-    },
-
-    setLocomotiveState({ commit, state }, { name, value, where }) {
-        commit('setLocomotive', { name: name, value: value, where: where })
-    },
-
-    stopAll({ state, commit }) {
-        commit('stopAll')
-    },
-
-    reboot({ state, commit }) {
-        commit('reboot')
-    },
-
-    poweroff({ state, commit }) {
-        commit('poweroff')
-    },
-
-    connected({ state, commit }) {
-        commit('connected')
-    },
-
-    disconnected({ state, commit }) {
-        commit('disconnected')
+    function getState() {
+        return {
+            'locomotives': locomotives.value,
+            'started': started.value,
+            'reboot': reboot.value,
+            'poweroff': poweroff.value,
+            'connected': connected.value
+        }
     }
-}
 
-// mutations
-const mutations = {
-    setData(state, { data }) {
-        state.locomotives = data.locomotives
-        state.started = data.started
-    },
+    function newMessage(message) {
+        locomotives.value = message.locomotives
+        started.value = message.started
+    }
 
-    setLocomotive(state, { name, value, where }) {
-        state.locomotives[name][where] = value
-        state.started = true;
-    },
+    function sendDataToServer() {
+        started.value = true;
+        const wsStore = useWsStore()
+        wsStore.sendMessage(getState())
+    }
 
-    stopAll(state) {
-        Object.keys(state.locomotives).forEach(key => {
-            state.locomotives[key].speed = 0;
+    function stopAll() {
+        Object.keys(locomotives.value).forEach(key => {
+            locomotives.value[key].speed = 0;
         })
-        state.started = false;
-    },
+        started.value = false;
+        const wsStore = useWsStore()
+        wsStore.sendMessage(getState())
+    }
 
-    reboot(state) {
-        state.reboot = true;
-    },
+    function setReboot() {
+        reboot.value = true;
+        const wsStore = useWsStore()
+        wsStore.sendMessage(getState())
+    }
 
-    poweroff(state) {
-        state.poweroff = true;
-    },
+    function setPowerOff() {
+        poweroff.value = true;
+        const wsStore = useWsStore()
+        wsStore.sendMessage(getState())
+    }
 
-    connected(state) {
-        state.connected = true;
-    },
+    function setConnected() {
+        connected.value = true;
+    }
 
-    disconnected(state) {
-        state.connected = false;
-    },
+    function setDisconnected() {
+        connected.value = false;
+    }
 
-}
-
-export default {
-    namespaced: true,
-    state,
-    getters,
-    actions,
-    mutations
-}
+    return {
+        locomotives,
+        started,
+        reboot,
+        poweroff,
+        connected,
+        getEnabledLocomotives,
+        newMessage,
+        stopAll,
+        setReboot,
+        setPowerOff,
+        setConnected,
+        setDisconnected,
+        sendDataToServer
+    }
+})
