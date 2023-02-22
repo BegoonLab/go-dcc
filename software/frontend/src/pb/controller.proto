@@ -5,9 +5,46 @@ option go_package = "go/controller";
 
 message Controller {
   map <string, Locomotive> locomotives = 1;
-  bool started = 2;
-  bool reboot = 3;
-  bool poweroff = 4;
+  map <string, RailwayModule> railway_modules = 2;
+  bool started = 3;
+  bool reboot = 4;
+  bool poweroff = 5;
+  string id = 6;
+}
+
+message RailwayModule {
+  string name = 1;
+  uint32 address = 2;
+  bool enabled = 3;
+  bool f0 = 4;
+  bool f1 = 5;
+  bool f2 = 6;
+  bool f3 = 7;
+  bool f4 = 8;
+  bool f5 = 9;
+  bool f6 = 10;
+  bool f7 = 11;
+  bool f8 = 12;
+  bool f9 = 13;
+  bool f10 = 14;
+  bool f11 = 15;
+  bool f12 = 16;
+  bool f13 = 17;
+  bool f14 = 18;
+  bool f15 = 19;
+  bool f16 = 20;
+  bool f17 = 21;
+  bool f18 = 22;
+  bool f19 = 23;
+  bool f20 = 24;
+  bool f21 = 25;
+  bool f22 = 26;
+  bool f23 = 27;
+  bool f24 = 28;
+  bool f25 = 29;
+  bool f26 = 30;
+  bool f27 = 31;
+  bool f28 = 32;
 }
 
 message Locomotive {

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexbegoon/go-dcc/software/dccpi/internal/driver/dummy"
+	"github.com/alexbegoon/go-dcc/internal/driver/dummy"
 )
 
 func TestSend(t *testing.T) {

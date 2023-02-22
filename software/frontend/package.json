@@ -1,11 +1,9 @@
 {
-    "name": "cmd-module-ui",
+    "name": "train-commander-ui",
     "version": "2.0.0",
-    "description": "Command Module UI",
+    "description": "Train Commander UI",
     "author": "Alexander Begoon <alexander.begoon@gmail.com>",
-    "main": "/server.js",
     "scripts": {
-        "start": "npm i && node server.js",
         "dev": "cross-env NODE_ENV=development webpack-dev-server --progress --host=0.0.0.0",
         "staging": "cross-env NODE_ENV=staging webpack",
         "build": "cross-env NODE_ENV=production webpack"

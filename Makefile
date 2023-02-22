@@ -1,5 +1,5 @@
 dev: 
-	docker compose up
+	docker compose up vue-ui
 build-ui:
 	docker compose run vue-ui npm run build
 build-server:
@@ -10,7 +10,7 @@ bash:
 	docker compose run vue-ui bash
 
 lint-go:
-	@golangci-lint run --fix --config .golangci.yml
+	cd ./software/dccpi && golangci-lint run --fix --config .golangci.yml
 
 compile-protobuf-go:
 	protoc -I=./software/frontend/src/pb --go_out=./software/dccpi/internal/pb/build ./software/frontend/src/pb/controller.proto

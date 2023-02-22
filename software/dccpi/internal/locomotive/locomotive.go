@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/alexbegoon/go-dcc/software/dccpi/internal/packet"
+	"github.com/alexbegoon/go-dcc/internal/packet"
 )
 
 // Direction constants.

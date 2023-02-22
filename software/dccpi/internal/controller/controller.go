@@ -1,27 +1,28 @@
 package controller
 
 import (
-	"encoding/json"
+	"log"
 	"sync"
+	"syscall"
 
-	"github.com/alexbegoon/go-dcc/software/dccpi/internal/pb/build/go/controller"
+	"github.com/alexbegoon/go-dcc/internal/pb/build/go/controller"
 	"google.golang.org/protobuf/proto"
 
 	"go.uber.org/zap"
 
-	"github.com/alexbegoon/go-dcc/software/dccpi/internal/config"
-	"github.com/alexbegoon/go-dcc/software/dccpi/internal/locomotive"
-	"github.com/alexbegoon/go-dcc/software/dccpi/internal/packet"
+	"github.com/alexbegoon/go-dcc/internal/config"
+	"github.com/alexbegoon/go-dcc/internal/locomotive"
+	"github.com/alexbegoon/go-dcc/internal/packet"
 )
 
 // CommandRepeat specifies how many times a single
 // packet is sent.
-var CommandRepeat = 10
+const CommandRepeat = 10
 
 // CommandMaxQueue specifies how many commands can
 // queue before sending a new command blocks
 // the sender
-var CommandMaxQueue = 3
+const CommandMaxQueue = 3
 
 // Driver can be implemented by any module to allow using go-dcc
 // on different platforms. dcc.Driver modules are in charge of
@@ -54,14 +55,7 @@ type Controller struct {
 	doneCh     chan bool
 	shutdownCh chan bool
 	commandCh  chan *packet.Packet
-	Log        *zap.Logger
-}
-
-type ControllerJSON struct {
-	Locomotives map[string]*locomotive.Locomotive `json:"locomotives"`
-	Started     bool                              `json:"started"`
-	Reboot      bool                              `json:"reboot"`
-	Poweroff    bool                              `json:"poweroff"`
+	Logger     *zap.Logger
 }
 
 // NewController builds a Controller.
@@ -77,24 +71,9 @@ func NewController(d Driver) *Controller {
 	}
 }
 
-// ToJSON
-// Deprecated: use ToProto
-func (c *Controller) ToJSON() []byte {
-	cj := ControllerJSON{
-		Locomotives: c.locomotives,
-		Started:     c.started,
-	}
-
-	d, err := json.Marshal(cj)
-	if err != nil {
-		c.Log.Error("Cannot marshal", zap.Error(err))
-	}
-
-	return d
-}
-
-func (c *Controller) ToProto() []byte {
+func (c *Controller) ToProto(id string) []byte {
 	locos := make(map[string]*controller.Locomotive, len(c.locomotives))
+	rm := make(map[string]*controller.RailwayModule, 0)
 
 	for _, l := range c.locomotives {
 		locos[l.Name] = &controller.Locomotive{
@@ -136,15 +115,17 @@ func (c *Controller) ToProto() []byte {
 	}
 
 	msg := &controller.Controller{
-		Locomotives: locos,
-		Started:     c.IsStarted(),
-		Reboot:      false,
-		Poweroff:    false,
+		Id:             id,
+		RailwayModules: rm,
+		Locomotives:    locos,
+		Started:        c.IsStarted(),
+		Reboot:         false,
+		Poweroff:       false,
 	}
 
 	data, err := proto.Marshal(msg)
 	if err != nil {
-		c.Log.Error("Cannot marshal protobuf", zap.Error(err))
+		c.Logger.Error("Cannot marshal protobuf", zap.Error(err))
 	}
 
 	return data
@@ -275,4 +256,80 @@ func (c *Controller) run() {
 			idle.PacketPause()
 		}
 	}
+}
+
+func (c *Controller) Handle(cProto *controller.Controller) error {
+	c.Logger.Debug("Received command", zap.String("ID", cProto.Id))
+
+	if !cProto.Started && c.IsStarted() {
+		c.Stop()
+	}
+
+	if cProto.Started && !c.IsStarted() {
+		c.Start()
+	}
+
+	if cProto.Reboot {
+		c.Logger.Info("Rebooting the system...")
+		log.Println("Rebooting the system...")
+
+		syscall.Sync()
+		err := syscall.Reboot(syscall.LINUX_REBOOT_CMD_RESTART)
+		if err != nil {
+			log.Printf("Reboot failed: %v", err)
+
+			return err
+		}
+	}
+
+	if cProto.Poweroff {
+		c.Logger.Info("Shutdown the system...")
+
+		syscall.Sync()
+		err := syscall.Reboot(syscall.LINUX_REBOOT_CMD_POWER_OFF)
+		if err != nil {
+			c.Logger.Error("Shutdown failed", zap.Error(err))
+
+			return err
+		}
+	}
+
+	for _, loco := range c.Locos() {
+		loco.Speed = uint8(cProto.Locomotives[loco.Name].Speed)
+		loco.Direction = locomotive.Direction(cProto.Locomotives[loco.Name].Direction)
+		loco.Enabled = cProto.Locomotives[loco.Name].Enabled
+		loco.Fl = cProto.Locomotives[loco.Name].Fl
+		loco.F1 = cProto.Locomotives[loco.Name].F1
+		loco.F2 = cProto.Locomotives[loco.Name].F2
+		loco.F3 = cProto.Locomotives[loco.Name].F3
+		loco.F4 = cProto.Locomotives[loco.Name].F4
+		loco.F5 = cProto.Locomotives[loco.Name].F5
+		loco.F6 = cProto.Locomotives[loco.Name].F6
+		loco.F7 = cProto.Locomotives[loco.Name].F7
+		loco.F8 = cProto.Locomotives[loco.Name].F8
+		loco.F9 = cProto.Locomotives[loco.Name].F9
+		loco.F10 = cProto.Locomotives[loco.Name].F10
+		loco.F11 = cProto.Locomotives[loco.Name].F11
+		loco.F12 = cProto.Locomotives[loco.Name].F12
+		loco.F13 = cProto.Locomotives[loco.Name].F13
+		loco.F14 = cProto.Locomotives[loco.Name].F14
+		loco.F15 = cProto.Locomotives[loco.Name].F15
+		loco.F16 = cProto.Locomotives[loco.Name].F16
+		loco.F17 = cProto.Locomotives[loco.Name].F17
+		loco.F18 = cProto.Locomotives[loco.Name].F18
+		loco.F19 = cProto.Locomotives[loco.Name].F19
+		loco.F20 = cProto.Locomotives[loco.Name].F20
+		loco.F21 = cProto.Locomotives[loco.Name].F21
+		loco.F22 = cProto.Locomotives[loco.Name].F22
+		loco.F23 = cProto.Locomotives[loco.Name].F23
+		loco.F24 = cProto.Locomotives[loco.Name].F24
+		loco.F25 = cProto.Locomotives[loco.Name].F25
+		loco.F26 = cProto.Locomotives[loco.Name].F26
+		loco.F27 = cProto.Locomotives[loco.Name].F27
+		loco.F28 = cProto.Locomotives[loco.Name].F28
+
+		loco.Apply()
+	}
+
+	return nil
 }

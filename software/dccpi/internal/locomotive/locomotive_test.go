@@ -1,8 +1,8 @@
 package locomotive
 
 // import (
-//	"github.com/alexbegoon/go-dcc/software/dccpi/internal/driver/dummy"
-//	"github.com/alexbegoon/go-dcc/software/dccpi/internal/packet"
+//	"github.com/alexbegoon/go-dcc/internal/driver/dummy"
+//	"github.com/alexbegoon/go-dcc/internal/packet"
 //	"testing"
 //)
 //

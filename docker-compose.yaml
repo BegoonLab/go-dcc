@@ -2,7 +2,8 @@ version: '3.9'
 services:
   vue-ui:
     build: 
-      context: ./software/frontend
+      context: ./software/frontend/ci
+      target: development
     ports:
       - "8080:8080"
     container_name: vue-ui
@@ -12,3 +13,13 @@ services:
        - ./software/frontend:/var/www/app
        - ./software/frontend/public:/var/www/build
     command: "npm run dev"
+  server:
+    build:
+      context: ./software/dccpi/ci
+      target: development
+    ports:
+      - "3000:3000"
+    container_name: dccpi-server
+    working_dir: /var/app
+    volumes:
+      - ./software/dccpi:/var/app:delegated

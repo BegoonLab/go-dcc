@@ -37,5 +37,8 @@ software/frontend/node_modules/*
 
 /vendor
 /software/dccpi/storage/*.log
+/software/dccpi/vendor
+/software/dccpi/*.log
+/software/dccpi/tmp
 software/dccpi/cmd/main
 hardware/kicad/railway_module_v1.0/railway-backups

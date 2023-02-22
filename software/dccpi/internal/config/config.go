@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/alexbegoon/go-dcc/software/dccpi/internal/locomotive"
+	"github.com/alexbegoon/go-dcc/internal/locomotive"
 )
 
 // Config allows to store configuration settings to initialize go-dcc.

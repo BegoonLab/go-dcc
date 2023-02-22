@@ -9,6 +9,9 @@ export const useControllerStore = defineStore('controller', () => {
     const reboot = ref(false)
     const poweroff = ref(false)
     const connected = ref(false)
+    const isDisconnected = computed(() => {
+        return !connected.value
+    })
     const getEnabledLocomotives = computed(() => {
         let enabledLocomotives = {}
         Object.keys(locomotives.value).forEach(key => {
@@ -69,6 +72,7 @@ export const useControllerStore = defineStore('controller', () => {
     }
 
     return {
+        isDisconnected,
         locomotives,
         started,
         reboot,

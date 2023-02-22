@@ -1,25 +1,41 @@
 <template>
   <v-app>
     <v-overlay
-        :absolute="false"
-        :value="!connected"
+        location-strategy="connected"
+        scroll-strategy="block"
+        close-delay="1000"
+        class="align-center justify-center"
+        v-model="isDisconnected"
+        o
     >
-      <v-row>
-        <v-col class="text-center">
-          Connection lost&nbsp;&nbsp;
-          <v-icon color="red">mdi-connection</v-icon>
-        </v-col>
-      </v-row>
-      <v-row>
-        <v-col>
+      <v-snackbar
+          v-model="isDisconnected"
+          multi-line
+          variant="elevated"
+          location="center"
+          color="error"
+      >
+        <v-icon>mdi-wifi-alert</v-icon>
+        Connection lost.
+        <br>
+        Please check your WiFi connection and try again.
+        <br>
+        <br>
+        <br>
+        Alternatively, you can reload the page to reconnect.
+        <template v-slot:actions>
           <v-btn
-              color="success"
+              color="green"
+              variant="elevated"
               @click="() => (reloadPage())"
           >
-            <v-icon>mdi-reload</v-icon>&nbsp;&nbsp;Reload page
+            Reload
+            <template v-slot:prepend>
+              <v-icon>mdi-reload</v-icon>
+            </template>
           </v-btn>
-        </v-col>
-      </v-row>
+        </template>
+      </v-snackbar>
     </v-overlay>
     <v-card class="overflow-hidden">
       <v-app-bar
@@ -95,6 +111,27 @@
                   </v-row>
                 </template>
               </v-list-item>
+              <v-list-subheader>RAILWAY MODULES</v-list-subheader>
+              <v-list-item density="compact">
+                <template v-slot:title>
+                  <v-row>
+                    <v-col cols="2" class="my-2">
+                      <v-icon icon="mdi-routes"></v-icon>
+                    </v-col>
+                    <v-col cols="6" class="my-2">
+                      Kyoto
+                    </v-col>
+                    <v-col cols="4" class="mr-0">
+                      <v-switch
+                          density="compact"
+                          :color="'green'"
+                          :true-value="true"
+                          :false-value="false"
+                      ></v-switch>
+                    </v-col>
+                  </v-row>
+                </template>
+              </v-list-item>
               <v-list-subheader>SYSTEM MANAGER</v-list-subheader>
               <v-list-item density="compact" @click="reboot" append-icon="mdi-restart">
                 <v-list-item-title>Reboot</v-list-item-title>
@@ -150,8 +187,7 @@ import {useWsStore} from "../store/modules/ws";
 
 const controller = useControllerStore()
 const ws = useWsStore()
-// const getEnabledLocomotives = controller.getEnabledLocomotives
-const { locomotives, started, connected, getEnabledLocomotives } = storeToRefs(controller)
+const { locomotives, started, isDisconnected, getEnabledLocomotives } = storeToRefs(controller)
 
 onMounted(() => {
   ws.connectToWebsocket();
@@ -159,8 +195,6 @@ onMounted(() => {
 
 const tab = ref(null)
 const drawer = ref(false)
-const group = ref(null)
-const overlay = ref(true)
 
 function reloadPage() {
   window.location.reload()
