@@ -39,16 +39,16 @@
     </v-overlay>
     <v-card class="overflow-hidden">
       <v-app-bar
-           color="deep-purple-darken-1"
-           density="compact"
+          color="deep-purple-darken-1"
+          density="compact"
       >
         <v-app-bar-nav-icon @click="drawer = true"></v-app-bar-nav-icon>
 
         <v-toolbar-title>Train Commander</v-toolbar-title>
 
         <v-btn
-            variant="flat"
-            color="red-accent-2"
+            :variant="started ? 'flat': 'outlined'"
+            :color="started ? 'red-accent-2': ''"
             :disabled="!started"
             @click="
             () => {
@@ -61,7 +61,16 @@
 
         <template v-slot:extension>
           <v-tabs v-model="tab" align-with-title show-arrows>
-            <v-tab v-for="item in ordered(getEnabledLocomotives)" :key="item.address" :value="item.name" :append-icon="item.speed > 0 ? (item.direction === 1 ? 'mdi-arrow-right-bold' : 'mdi-arrow-left-bold' ) : 'mdi-alert-octagon'">
+            <v-tab v-for="item in ordered(getEnabledLocomotives)" :key="item.address" :value="item.name"
+                   prepend-icon="mdi-tram"
+                   :append-icon="item.speed > 0 ? (item.direction === 1 ? 'mdi-arrow-right-bold' : 'mdi-arrow-left-bold' ) : 'mdi-alert-octagon'">
+              {{ item.name }}
+            </v-tab>
+            <v-tab v-for="item in ordered(getEnabledRailwayModules)"
+                   :key="item.address"
+                   :value="item.name"
+                   prepend-icon="mdi-routes"
+            >
               {{ item.name }}
             </v-tab>
           </v-tabs>
@@ -89,7 +98,8 @@
           <v-navigation-drawer v-model="drawer" absolute temporary>
             <v-list density="compact">
               <v-list-subheader>TRAINS</v-list-subheader>
-              <v-list-item density="compact" v-if="locomotives && Object.keys(locomotives).length > 0" v-for="item in ordered(locomotives)" :key="item.address">
+              <v-list-item density="compact" v-if="locomotives && Object.keys(locomotives).length > 0"
+                           v-for="item in ordered(locomotives)" :key="item.address">
                 <template v-slot:title>
                   <v-row>
                     <v-col cols="2" class="my-2">
@@ -112,14 +122,15 @@
                 </template>
               </v-list-item>
               <v-list-subheader>RAILWAY MODULES</v-list-subheader>
-              <v-list-item density="compact">
+              <v-list-item density="compact" v-if="railwayModules && Object.keys(railwayModules).length > 0"
+                           v-for="item in ordered(railwayModules)" :key="item.address">
                 <template v-slot:title>
                   <v-row>
                     <v-col cols="2" class="my-2">
                       <v-icon icon="mdi-routes"></v-icon>
                     </v-col>
                     <v-col cols="6" class="my-2">
-                      Kyoto
+                      {{ item.name }}
                     </v-col>
                     <v-col cols="4" class="mr-0">
                       <v-switch
@@ -127,6 +138,8 @@
                           :color="'green'"
                           :true-value="true"
                           :false-value="false"
+                          v-model="item.enabled"
+                          @change="(e) => {update()}"
                       ></v-switch>
                     </v-col>
                   </v-row>
@@ -180,14 +193,21 @@
 
 <script setup>
 import Train from "./Train.vue";
-import {computed, reactive, onMounted, ref, watch} from "vue";
+import {onMounted, ref} from "vue";
 import {storeToRefs} from "pinia";
 import {useControllerStore} from "../store/modules/controller";
 import {useWsStore} from "../store/modules/ws";
 
 const controller = useControllerStore()
 const ws = useWsStore()
-const { locomotives, started, isDisconnected, getEnabledLocomotives } = storeToRefs(controller)
+const {
+  railwayModules,
+  locomotives,
+  started,
+  isDisconnected,
+  getEnabledLocomotives,
+  getEnabledRailwayModules,
+} = storeToRefs(controller)
 
 onMounted(() => {
   ws.connectToWebsocket();
@@ -216,7 +236,7 @@ function update() {
   controller.sendDataToServer()
 }
 
-function ordered (unordered) {
+function ordered(unordered) {
   return Object.keys(unordered).sort().reduce(
       (obj, key) => {
         obj[key] = unordered[key];

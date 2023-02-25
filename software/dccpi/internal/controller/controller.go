@@ -5,6 +5,8 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/alexbegoon/go-dcc/internal/module"
+
 	"github.com/alexbegoon/go-dcc/internal/pb/build/go/controller"
 	"google.golang.org/protobuf/proto"
 
@@ -47,9 +49,10 @@ type Driver interface {
 // is in charge of sending DCC packets continuously to
 // the tracks.
 type Controller struct {
-	locomotives map[string]*locomotive.Locomotive
-	mux         sync.RWMutex
-	driver      Driver
+	locomotives    map[string]*locomotive.Locomotive
+	railwayModules map[string]*module.Railway
+	mux            sync.RWMutex
+	driver         Driver
 
 	started    bool
 	doneCh     chan bool
@@ -63,18 +66,26 @@ func NewController(d Driver) *Controller {
 	d.TracksOff()
 
 	return &Controller{
-		driver:      d,
-		locomotives: make(map[string]*locomotive.Locomotive),
-		doneCh:      make(chan bool),
-		shutdownCh:  make(chan bool),
-		commandCh:   make(chan *packet.Packet, CommandMaxQueue),
+		driver:         d,
+		locomotives:    make(map[string]*locomotive.Locomotive),
+		railwayModules: make(map[string]*module.Railway),
+		doneCh:         make(chan bool),
+		shutdownCh:     make(chan bool),
+		commandCh:      make(chan *packet.Packet, CommandMaxQueue),
 	}
 }
 
 func (c *Controller) ToProto(id string) []byte {
 	locos := make(map[string]*controller.Locomotive, len(c.locomotives))
-	rm := make(map[string]*controller.RailwayModule, 0)
+	railwayModules := make(map[string]*controller.RailwayModule, len(c.railwayModules))
 
+	for _, m := range c.railwayModules {
+		railwayModules[m.Name] = &controller.RailwayModule{
+			Name:    m.Name,
+			Address: uint32(m.Address),
+			Enabled: m.Enabled,
+		}
+	}
 	for _, l := range c.locomotives {
 		locos[l.Name] = &controller.Locomotive{
 			Name:      l.Name,
@@ -116,7 +127,7 @@ func (c *Controller) ToProto(id string) []byte {
 
 	msg := &controller.Controller{
 		Id:             id,
-		RailwayModules: rm,
+		RailwayModules: railwayModules,
 		Locomotives:    locos,
 		Started:        c.IsStarted(),
 		Reboot:         false,
@@ -146,6 +157,14 @@ func NewControllerWithConfig(d Driver, cfg *config.Config) *Controller {
 		})
 	}
 
+	for _, rm := range cfg.RailwayModules {
+		c.AddRailwayModule(&module.Railway{
+			Name:    rm.Name,
+			Address: rm.Address,
+			Enabled: rm.Enabled,
+		})
+	}
+
 	return c
 }
 
@@ -163,6 +182,22 @@ func (c *Controller) RmLoco(l *locomotive.Locomotive) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 	delete(c.locomotives, l.Name)
+}
+
+// AddRailwayModule adds a DCC device to the controller. The device
+// will start receiving packets if the controller is running.
+func (c *Controller) AddRailwayModule(rm *module.Railway) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	c.railwayModules[rm.Name] = rm
+}
+
+// RmRailwayModule removes a DCC device from the controller. There
+// will be no longer packets sent to it.
+func (c *Controller) RmRailwayModule(rm *module.Railway) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	delete(c.railwayModules, rm.Name)
 }
 
 // GetLoco retrieves a DCC device by its Name. The boolean is
@@ -295,6 +330,9 @@ func (c *Controller) Handle(cProto *controller.Controller) error {
 	}
 
 	for _, loco := range c.Locos() {
+		if _, ok := cProto.Locomotives[loco.Name]; !ok {
+			continue
+		}
 		loco.Speed = uint8(cProto.Locomotives[loco.Name].Speed)
 		loco.Direction = locomotive.Direction(cProto.Locomotives[loco.Name].Direction)
 		loco.Enabled = cProto.Locomotives[loco.Name].Enabled

@@ -1,15 +1,15 @@
 {
-  "railway_arrows": [
+  "railway_modules": [
     {
-      "name": "Kyoto Central Station",
+      "name": "Kyoto",
       "address": 35
     },
     {
-      "name": "Grand Central Terminal",
+      "name": "Grand Central",
       "address": 36
     },
     {
-      "name": "Zurich Hauptbahnhof",
+      "name": "Zurich",
       "address": 37
     }
   ],

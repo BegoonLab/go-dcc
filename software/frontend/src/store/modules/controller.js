@@ -4,6 +4,8 @@ import {useWsStore} from "./ws";
 
 export const useControllerStore = defineStore('controller', () => {
 
+    const id = ref("")
+    const railwayModules = ref({})
     const locomotives = ref({})
     const started = ref(false)
     const reboot = ref(false)
@@ -11,6 +13,15 @@ export const useControllerStore = defineStore('controller', () => {
     const connected = ref(false)
     const isDisconnected = computed(() => {
         return !connected.value
+    })
+    const getEnabledRailwayModules = computed(() => {
+        let enabledRailwayModules = {}
+        Object.keys(railwayModules.value).forEach(key => {
+            if (railwayModules.value[key] && railwayModules.value[key].enabled) {
+                getEnabledRailwayModules[key] = railwayModules.value[key]
+            }
+        })
+        return enabledRailwayModules
     })
     const getEnabledLocomotives = computed(() => {
         let enabledLocomotives = {}
@@ -24,7 +35,9 @@ export const useControllerStore = defineStore('controller', () => {
 
     function getState() {
         return {
+            'id': id.value,
             'locomotives': locomotives.value,
+            'railwayModules': railwayModules.value,
             'started': started.value,
             'reboot': reboot.value,
             'poweroff': poweroff.value,
@@ -34,6 +47,8 @@ export const useControllerStore = defineStore('controller', () => {
     function newMessage(message) {
         locomotives.value = message.locomotives
         started.value = message.started
+        railwayModules.value = message.railwayModules
+        id.value = message.id
     }
 
     function sendDataToServer() {
@@ -72,12 +87,14 @@ export const useControllerStore = defineStore('controller', () => {
     }
 
     return {
+        railwayModules,
         isDisconnected,
         locomotives,
         started,
         reboot,
         poweroff,
         connected,
+        getEnabledRailwayModules,
         getEnabledLocomotives,
         newMessage,
         stopAll,

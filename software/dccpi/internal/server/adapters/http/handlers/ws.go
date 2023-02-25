@@ -3,24 +3,24 @@ package handlers
 import (
 	"context"
 	"errors"
+	"fmt"
+	"net"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/alexbegoon/go-dcc/internal/controller"
-	controllerProto "github.com/alexbegoon/go-dcc/internal/pb/build/go/controller"
+	ctrlProto "github.com/alexbegoon/go-dcc/internal/pb/build/go/controller"
+	"github.com/gobwas/ws"
+	"github.com/gobwas/ws/wsutil"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"golang.org/x/time/rate"
 	"google.golang.org/protobuf/proto"
-
-	"nhooyr.io/websocket"
 )
 
 const (
-	WriteTimeout       = 5 * time.Second
 	MaxMessagesInQueue = 16
-	MaxMessageLength   = 8192
 	Burst              = 8
 	Limit              = time.Millisecond * 100
 )
@@ -69,23 +69,24 @@ func (h *WsHandler) ServeWS(w http.ResponseWriter, r *http.Request) {
 	h.subscribeHandler(w, r)
 }
 
-func (h *WsHandler) readHandler(ctx context.Context, c *websocket.Conn) {
+func (h *WsHandler) readHandler(ctx context.Context, conn net.Conn) {
 	go func() {
 		for {
-			typ, r, err := c.Read(ctx)
-			if err != nil {
-				h.Logger.Error("Error while reading from socket", zap.Error(err))
+			var cProto ctrlProto.Controller
+			msg, op, err := wsutil.ReadClientData(conn)
+			if op != ws.OpBinary {
+				h.Logger.Error(fmt.Sprintf("Client data is not binary, but %v", op))
+
+				return
 			}
-
-			if typ != websocket.MessageBinary {
-				h.Logger.Error("Wrong data type received", zap.Any("type", typ))
-			}
-
-			var cProto controllerProto.Controller
-
-			err = proto.Unmarshal(r, &cProto)
 			if err != nil {
-				h.Logger.Error("Unable to Unmarshal", zap.Error(err))
+				h.Logger.Error("Unable to read client data", zap.Error(err))
+
+				return
+			}
+			err = proto.Unmarshal(msg, &cProto)
+			if err != nil {
+				h.Logger.Error("Unable to unmarshal client data", zap.Error(err))
 
 				return
 			}
@@ -97,7 +98,7 @@ func (h *WsHandler) readHandler(ctx context.Context, c *websocket.Conn) {
 				return
 			}
 
-			h.publish(ctx)
+			go h.publish(ctx)
 		}
 	}()
 }
@@ -105,27 +106,21 @@ func (h *WsHandler) readHandler(ctx context.Context, c *websocket.Conn) {
 // subscribeHandler accepts the WebSocket connection and then subscribes
 // it to all future messages.
 func (h *WsHandler) subscribeHandler(w http.ResponseWriter, r *http.Request) {
-	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{
-		InsecureSkipVerify: true,
-	})
+	conn, _, _, err := ws.UpgradeHTTP(r, w)
 	if err != nil {
 		h.Logger.Error("Unable to accept handshake", zap.Error(err))
 
 		return
 	}
-	defer func(c *websocket.Conn, code websocket.StatusCode, reason string) {
-		err = c.Close(code, reason)
+	defer func(conn net.Conn) {
+		err = conn.Close()
 		if err != nil {
 			h.Logger.Error("Unable to close connection", zap.Error(err))
 		}
-	}(c, websocket.StatusInternalError, "")
+	}(conn)
 
-	err = h.subscribe(r.Context(), c)
+	err = h.subscribe(r.Context(), conn)
 	if errors.Is(err, context.Canceled) {
-		return
-	}
-	if websocket.CloseStatus(err) == websocket.StatusNormalClosure ||
-		websocket.CloseStatus(err) == websocket.StatusGoingAway {
 		return
 	}
 	if err != nil {
@@ -133,10 +128,6 @@ func (h *WsHandler) subscribeHandler(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
-
-	h.readHandler(r.Context(), c)
-
-	h.publish(r.Context())
 }
 
 // subscribe subscribes the given WebSocket to all broadcast messages.
@@ -147,14 +138,12 @@ func (h *WsHandler) subscribeHandler(w http.ResponseWriter, r *http.Request) {
 //
 // It uses CloseRead to keep reading from the connection to process control
 // messages and cancel the context if the connection drops.
-func (h *WsHandler) subscribe(ctx context.Context, c *websocket.Conn) error {
-	ctx = c.CloseRead(ctx)
-
+func (h *WsHandler) subscribe(ctx context.Context, conn net.Conn) error {
 	s := &subscriber{
 		id:   uuid.NewString(),
 		msgs: make(chan []byte, h.subscriberMessageBuffer),
 		closeSlow: func() {
-			err := c.Close(websocket.StatusPolicyViolation, "connection too slow to keep up with messages")
+			err := conn.Close()
 			if err != nil {
 				h.Logger.Error("Unable to close socket", zap.Error(err))
 			}
@@ -163,10 +152,14 @@ func (h *WsHandler) subscribe(ctx context.Context, c *websocket.Conn) error {
 	h.addSubscriber(s)
 	defer h.deleteSubscriber(s)
 
+	h.readHandler(ctx, conn)
+
+	go h.publish(ctx)
+
 	for {
 		select {
 		case msg := <-s.msgs:
-			err := writeTimeout(ctx, WriteTimeout, c, msg)
+			err := writeTimeout(conn, msg)
 			if err != nil {
 				return err
 			}
@@ -186,6 +179,8 @@ func (h *WsHandler) publish(ctx context.Context) {
 	err := h.publishLimiter.Wait(ctx)
 	if err != nil {
 		h.Logger.Error("Unable to publish", zap.Error(err))
+
+		return
 	}
 
 	for s := range h.subscribers {
@@ -211,9 +206,6 @@ func (h *WsHandler) deleteSubscriber(s *subscriber) {
 	h.subscribersMu.Unlock()
 }
 
-func writeTimeout(ctx context.Context, timeout time.Duration, c *websocket.Conn, msg []byte) error {
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
-	return c.Write(ctx, websocket.MessageBinary, msg)
+func writeTimeout(conn net.Conn, msg []byte) error {
+	return wsutil.WriteServerMessage(conn, ws.OpBinary, msg)
 }

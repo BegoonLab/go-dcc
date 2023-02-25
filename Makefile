@@ -1,5 +1,5 @@
 dev: 
-	docker compose up vue-ui
+	docker compose up server vue-ui
 build-ui:
 	docker compose run vue-ui npm run build
 build-server:

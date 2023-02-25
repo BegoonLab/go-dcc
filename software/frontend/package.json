@@ -28,6 +28,7 @@
         "protobufjs-loader": "^2.0.2",
         "sass": "^1.58.3",
         "sass-loader": "^13.2.0",
+        "sockjs-client": "^1.6.1",
         "vue": "latest",
         "vue-loader": "^17.0.1",
         "vue-style-loader": "^4.1.3",

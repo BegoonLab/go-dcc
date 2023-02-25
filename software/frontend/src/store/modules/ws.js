@@ -30,7 +30,7 @@ export const useWsStore = defineStore('ws', () => {
         console.log("Connection Error!");
         controllerStore.setDisconnected()
     }
-    function onWebsocketOpen(store) {
+    function onWebsocketOpen() {
         const controllerStore = useControllerStore()
         console.log("connected to WS!");
         controllerStore.setConnected()

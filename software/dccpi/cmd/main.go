@@ -80,7 +80,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("can't initialize zap logger: %v", err)
 	}
-	cfg, err := config.LoadConfig("initial.json")
+	cfg, err := config.LoadConfig(configFlag)
 	if err != nil {
 		l.Error("Cannot load configuration. Using empty one.", zap.Error(err))
 		cfg = &config.Config{}

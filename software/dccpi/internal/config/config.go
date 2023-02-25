@@ -5,12 +5,15 @@ import (
 	"log"
 	"os"
 
+	"github.com/alexbegoon/go-dcc/internal/module"
+
 	"github.com/alexbegoon/go-dcc/internal/locomotive"
 )
 
 // Config allows to store configuration settings to initialize go-dcc.
 type Config struct {
-	Locomotives []*locomotive.Locomotive `json:"locomotives"`
+	Locomotives    []*locomotive.Locomotive `json:"locomotives"`
+	RailwayModules []*module.Railway        `json:"railway_modules"`
 }
 
 // LoadConfig parses a configuration file and returns a Config object.
@@ -25,6 +28,7 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, err
 	}
 	log.Printf("Loaded configuration for %d locomotive(s)", len(cfg.Locomotives))
+	log.Printf("Loaded configuration for %d railway module(s)", len(cfg.RailwayModules))
 
 	return &cfg, nil
 }
