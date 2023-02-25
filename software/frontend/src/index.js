@@ -2,6 +2,7 @@ import {createApp} from 'vue'
 import {createPinia} from 'pinia'
 import App from './components/App.vue'
 import Train from './components/Train.vue'
+import RailwayModule from './components/RailwayModule.vue'
 
 // Vuetify
 import 'vuetify/styles'
@@ -25,5 +26,6 @@ app.use(vuetify)
 app.use(pinia)
 
 app.component('train', Train)
+app.component('railway-module', RailwayModule)
 
 app.mount('#app')

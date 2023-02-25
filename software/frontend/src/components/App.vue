@@ -94,6 +94,17 @@
                 </v-col>
               </v-row>
             </v-window-item>
+            <v-window-item
+                v-for="item in ordered(getEnabledRailwayModules)"
+                :key="item.address"
+                :value="item.name"
+            >
+              <v-row :justify="'center'">
+                <v-col md="4" sm="12" xs="12">
+                  <railway-module :name="item.name"></railway-module>
+                </v-col>
+              </v-row>
+            </v-window-item>
           </v-window>
           <v-navigation-drawer v-model="drawer" absolute temporary>
             <v-list density="compact">

@@ -76,6 +76,8 @@ func NewController(d Driver) *Controller {
 }
 
 func (c *Controller) ToProto(id string) []byte {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
 	locos := make(map[string]*controller.Locomotive, len(c.locomotives))
 	railwayModules := make(map[string]*controller.RailwayModule, len(c.railwayModules))
 
@@ -222,6 +224,18 @@ func (c *Controller) Locos() []*locomotive.Locomotive {
 	return locos
 }
 
+// RailwayModules returns a list of all registered Railway Modules.
+func (c *Controller) RailwayModules() []*module.Railway {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+	railwayModules := make([]*module.Railway, 0, len(c.railwayModules))
+	for _, l := range c.railwayModules {
+		railwayModules = append(railwayModules, l)
+	}
+
+	return railwayModules
+}
+
 // Command allows to send a custom Packet to the tracks.
 // The packet will be sent CommandRepeat times.
 func (c *Controller) Command(p *packet.Packet) {
@@ -294,6 +308,8 @@ func (c *Controller) run() {
 }
 
 func (c *Controller) Handle(cProto *controller.Controller) error {
+	c.mux.Lock()
+	defer c.mux.Unlock()
 	c.Logger.Debug("Received command", zap.String("ID", cProto.Id))
 
 	if !cProto.Started && c.IsStarted() {
@@ -329,42 +345,53 @@ func (c *Controller) Handle(cProto *controller.Controller) error {
 		}
 	}
 
-	for _, loco := range c.Locos() {
-		if _, ok := cProto.Locomotives[loco.Name]; !ok {
+	for _, railwayModule := range c.railwayModules {
+		railwayModuleProto, ok := cProto.RailwayModules[railwayModule.Name]
+
+		if !ok {
 			continue
 		}
-		loco.Speed = uint8(cProto.Locomotives[loco.Name].Speed)
-		loco.Direction = locomotive.Direction(cProto.Locomotives[loco.Name].Direction)
-		loco.Enabled = cProto.Locomotives[loco.Name].Enabled
-		loco.Fl = cProto.Locomotives[loco.Name].Fl
-		loco.F1 = cProto.Locomotives[loco.Name].F1
-		loco.F2 = cProto.Locomotives[loco.Name].F2
-		loco.F3 = cProto.Locomotives[loco.Name].F3
-		loco.F4 = cProto.Locomotives[loco.Name].F4
-		loco.F5 = cProto.Locomotives[loco.Name].F5
-		loco.F6 = cProto.Locomotives[loco.Name].F6
-		loco.F7 = cProto.Locomotives[loco.Name].F7
-		loco.F8 = cProto.Locomotives[loco.Name].F8
-		loco.F9 = cProto.Locomotives[loco.Name].F9
-		loco.F10 = cProto.Locomotives[loco.Name].F10
-		loco.F11 = cProto.Locomotives[loco.Name].F11
-		loco.F12 = cProto.Locomotives[loco.Name].F12
-		loco.F13 = cProto.Locomotives[loco.Name].F13
-		loco.F14 = cProto.Locomotives[loco.Name].F14
-		loco.F15 = cProto.Locomotives[loco.Name].F15
-		loco.F16 = cProto.Locomotives[loco.Name].F16
-		loco.F17 = cProto.Locomotives[loco.Name].F17
-		loco.F18 = cProto.Locomotives[loco.Name].F18
-		loco.F19 = cProto.Locomotives[loco.Name].F19
-		loco.F20 = cProto.Locomotives[loco.Name].F20
-		loco.F21 = cProto.Locomotives[loco.Name].F21
-		loco.F22 = cProto.Locomotives[loco.Name].F22
-		loco.F23 = cProto.Locomotives[loco.Name].F23
-		loco.F24 = cProto.Locomotives[loco.Name].F24
-		loco.F25 = cProto.Locomotives[loco.Name].F25
-		loco.F26 = cProto.Locomotives[loco.Name].F26
-		loco.F27 = cProto.Locomotives[loco.Name].F27
-		loco.F28 = cProto.Locomotives[loco.Name].F28
+		railwayModule.Enabled = railwayModuleProto.Enabled
+
+	}
+
+	for _, loco := range c.locomotives {
+		lProto, ok := cProto.Locomotives[loco.Name]
+		if !ok {
+			continue
+		}
+		loco.Speed = uint8(lProto.Speed)
+		loco.Direction = locomotive.Direction(lProto.Direction)
+		loco.Enabled = lProto.Enabled
+		loco.Fl = lProto.Fl
+		loco.F1 = lProto.F1
+		loco.F2 = lProto.F2
+		loco.F3 = lProto.F3
+		loco.F4 = lProto.F4
+		loco.F5 = lProto.F5
+		loco.F6 = lProto.F6
+		loco.F7 = lProto.F7
+		loco.F8 = lProto.F8
+		loco.F9 = lProto.F9
+		loco.F10 = lProto.F10
+		loco.F11 = lProto.F11
+		loco.F12 = lProto.F12
+		loco.F13 = lProto.F13
+		loco.F14 = lProto.F14
+		loco.F15 = lProto.F15
+		loco.F16 = lProto.F16
+		loco.F17 = lProto.F17
+		loco.F18 = lProto.F18
+		loco.F19 = lProto.F19
+		loco.F20 = lProto.F20
+		loco.F21 = lProto.F21
+		loco.F22 = lProto.F22
+		loco.F23 = lProto.F23
+		loco.F24 = lProto.F24
+		loco.F25 = lProto.F25
+		loco.F26 = lProto.F26
+		loco.F27 = lProto.F27
+		loco.F28 = lProto.F28
 
 		loco.Apply()
 	}

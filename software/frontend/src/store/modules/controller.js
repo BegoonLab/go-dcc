@@ -18,7 +18,7 @@ export const useControllerStore = defineStore('controller', () => {
         let enabledRailwayModules = {}
         Object.keys(railwayModules.value).forEach(key => {
             if (railwayModules.value[key] && railwayModules.value[key].enabled) {
-                getEnabledRailwayModules[key] = railwayModules.value[key]
+                enabledRailwayModules[key] = railwayModules.value[key]
             }
         })
         return enabledRailwayModules
