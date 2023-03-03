@@ -100,7 +100,10 @@ type RoutesData struct {
 func (r *Railway) SendPackets() {
 	r.mux.Lock()
 	defer r.mux.Unlock()
-	r.flPacket.Send()
+
+	if r.flPacket != nil {
+		r.flPacket.Send()
+	}
 	if r.sendGroupTwo {
 		r.fGroupTwoPacket0.Send()
 		r.fGroupTwoPacket1.Send()

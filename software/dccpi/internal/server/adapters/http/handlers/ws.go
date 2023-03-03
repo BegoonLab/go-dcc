@@ -119,7 +119,7 @@ func (h *WsHandler) subscribeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}(conn)
 
-	err = h.subscribe(r.Context(), conn)
+	err = h.subscribe(r, conn)
 	if errors.Is(err, context.Canceled) {
 		return
 	}
@@ -138,7 +138,7 @@ func (h *WsHandler) subscribeHandler(w http.ResponseWriter, r *http.Request) {
 //
 // It uses CloseRead to keep reading from the connection to process control
 // messages and cancel the context if the connection drops.
-func (h *WsHandler) subscribe(ctx context.Context, conn net.Conn) error {
+func (h *WsHandler) subscribe(r *http.Request, conn net.Conn) error {
 	s := &subscriber{
 		id:   uuid.NewString(),
 		msgs: make(chan []byte, h.subscriberMessageBuffer),
@@ -152,9 +152,18 @@ func (h *WsHandler) subscribe(ctx context.Context, conn net.Conn) error {
 	h.addSubscriber(s)
 	defer h.deleteSubscriber(s)
 
-	h.readHandler(ctx, conn)
+	h.readHandler(r.Context(), conn)
 
-	go h.publish(ctx)
+	go h.publish(r.Context())
+
+	h.Logger.Info(
+		"Subscribed a new client",
+		zap.String("ID", s.id),
+		zap.String("user-agent", r.UserAgent()),
+		zap.String("remote-address", r.RemoteAddr),
+		zap.String("host", r.Host),
+		zap.String("referer", r.Referer()),
+	)
 
 	for {
 		select {
@@ -163,8 +172,8 @@ func (h *WsHandler) subscribe(ctx context.Context, conn net.Conn) error {
 			if err != nil {
 				return err
 			}
-		case <-ctx.Done():
-			return ctx.Err()
+		case <-r.Context().Done():
+			return r.Context().Err()
 		}
 	}
 }

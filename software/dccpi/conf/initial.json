@@ -17,6 +17,18 @@
       "address": 37,
       "enabled": false,
       "active_route": "Custom"
+    },
+    {
+      "name": "Vienna",
+      "address": 38,
+      "enabled": false,
+      "active_route": "Custom"
+    },
+    {
+      "name": "München",
+      "address": 39,
+      "enabled": false,
+      "active_route": "Custom"
     }
   ],
   "locomotives": [

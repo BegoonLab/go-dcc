@@ -51,7 +51,6 @@ export const useWsStore = defineStore('ws', () => {
             console.log("Connection Error!");
             controllerStore.setDisconnected()
         }
-
         const buffer = ControllerType.encode(msg).finish();
         ws.send(buffer);
     }

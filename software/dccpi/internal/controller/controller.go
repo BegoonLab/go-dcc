@@ -81,10 +81,9 @@ func (c *Controller) ToProto(id string) []byte {
 	defer c.mux.RUnlock()
 	locos := make(map[string]*controller.Controller_Locomotive, len(c.locomotives))
 	railwayModules := make(map[string]*controller.Controller_RailwayModule, len(c.railwayModules))
-	routes := make(map[string]*controller.Controller_RailwayModule_Route)
 
 	for _, m := range c.railwayModules {
-
+		routes := make(map[string]*controller.Controller_RailwayModule_Route, len(m.Routes))
 		for _, route := range m.Routes {
 			routes[route.Name] = &controller.Controller_RailwayModule_Route{
 				Name: route.Name,
@@ -201,6 +200,7 @@ func NewControllerWithConfig(d Driver, cfg *config.Config, logger *zap.Logger) *
 			Fl:        loco.Fl,
 			Driver:    d,
 		})
+		c.Logger.Info("Added locomotive", zap.String("name", loco.Name), zap.Uint8("address", loco.Address))
 	}
 
 	for _, rm := range cfg.RailwayModules {
@@ -229,6 +229,7 @@ func NewControllerWithConfig(d Driver, cfg *config.Config, logger *zap.Logger) *
 		}
 
 		c.AddRailwayModule(railwayModule)
+		c.Logger.Info("Added railway module", zap.String("name", rm.Name), zap.Uint8("address", rm.Address))
 	}
 
 	return c
@@ -382,7 +383,7 @@ func (c *Controller) run() {
 func (c *Controller) Handle(cProto *controller.Controller) error {
 	c.mux.Lock()
 	defer c.mux.Unlock()
-	c.Logger.Debug("Received command", zap.String("ID", cProto.Id))
+	c.Logger.Info("Handling command from client...", zap.String("ID", cProto.Id))
 
 	if !cProto.Started && c.IsStarted() {
 		c.Stop()
@@ -420,47 +421,49 @@ func (c *Controller) Handle(cProto *controller.Controller) error {
 	c.handleLocomotives(cProto)
 	c.handleRailwayModules(cProto)
 
+	c.Logger.Info("Command from client has been processed successfully", zap.String("ID", cProto.Id))
+
 	return nil
 }
 
 func (c *Controller) handleLocomotives(cProto *controller.Controller) {
 	for _, loco := range c.locomotives {
-		lProto, ok := cProto.Locomotives[loco.Name]
+		locoProto, ok := cProto.Locomotives[loco.Name]
 		if !ok {
 			continue
 		}
-		loco.Speed = uint8(lProto.Speed)
-		loco.Direction = locomotive.Direction(lProto.Direction)
-		loco.Enabled = lProto.Enabled
-		loco.Fl = lProto.Fl
-		loco.F1 = lProto.F1
-		loco.F2 = lProto.F2
-		loco.F3 = lProto.F3
-		loco.F4 = lProto.F4
-		loco.F5 = lProto.F5
-		loco.F6 = lProto.F6
-		loco.F7 = lProto.F7
-		loco.F8 = lProto.F8
-		loco.F9 = lProto.F9
-		loco.F10 = lProto.F10
-		loco.F11 = lProto.F11
-		loco.F12 = lProto.F12
-		loco.F13 = lProto.F13
-		loco.F14 = lProto.F14
-		loco.F15 = lProto.F15
-		loco.F16 = lProto.F16
-		loco.F17 = lProto.F17
-		loco.F18 = lProto.F18
-		loco.F19 = lProto.F19
-		loco.F20 = lProto.F20
-		loco.F21 = lProto.F21
-		loco.F22 = lProto.F22
-		loco.F23 = lProto.F23
-		loco.F24 = lProto.F24
-		loco.F25 = lProto.F25
-		loco.F26 = lProto.F26
-		loco.F27 = lProto.F27
-		loco.F28 = lProto.F28
+		loco.Speed = uint8(locoProto.Speed)
+		loco.Direction = locomotive.Direction(locoProto.Direction)
+		loco.Enabled = locoProto.Enabled
+		loco.Fl = locoProto.Fl
+		loco.F1 = locoProto.F1
+		loco.F2 = locoProto.F2
+		loco.F3 = locoProto.F3
+		loco.F4 = locoProto.F4
+		loco.F5 = locoProto.F5
+		loco.F6 = locoProto.F6
+		loco.F7 = locoProto.F7
+		loco.F8 = locoProto.F8
+		loco.F9 = locoProto.F9
+		loco.F10 = locoProto.F10
+		loco.F11 = locoProto.F11
+		loco.F12 = locoProto.F12
+		loco.F13 = locoProto.F13
+		loco.F14 = locoProto.F14
+		loco.F15 = locoProto.F15
+		loco.F16 = locoProto.F16
+		loco.F17 = locoProto.F17
+		loco.F18 = locoProto.F18
+		loco.F19 = locoProto.F19
+		loco.F20 = locoProto.F20
+		loco.F21 = locoProto.F21
+		loco.F22 = locoProto.F22
+		loco.F23 = locoProto.F23
+		loco.F24 = locoProto.F24
+		loco.F25 = locoProto.F25
+		loco.F26 = locoProto.F26
+		loco.F27 = locoProto.F27
+		loco.F28 = locoProto.F28
 
 		loco.Apply()
 	}
@@ -487,48 +490,43 @@ func (c *Controller) handleRailwayModules(cProto *controller.Controller) {
 }
 
 func (c *Controller) handleRoutes(railwayModuleProto *controller.Controller_RailwayModule) map[string]*module.Route {
-	routes := make(map[string]*module.Route)
+	routes := make(map[string]*module.Route, len(railwayModuleProto.Routes))
 
 	for _, route := range railwayModuleProto.Routes {
-		routeProto, ok := railwayModuleProto.Routes[route.Name]
-
-		if !ok {
-			continue
-		}
-		routes[routeProto.Name] = &module.Route{
-			Name: routeProto.Name,
-			F0:   routeProto.F0,
-			F1:   routeProto.F1,
-			F2:   routeProto.F2,
-			F3:   routeProto.F3,
-			F4:   routeProto.F4,
-			F5:   routeProto.F5,
-			F6:   routeProto.F6,
-			F7:   routeProto.F7,
-			F8:   routeProto.F8,
-			F9:   routeProto.F9,
-			F10:  routeProto.F10,
-			F11:  routeProto.F11,
-			F12:  routeProto.F12,
-			F13:  routeProto.F13,
-			F14:  routeProto.F14,
-			F15:  routeProto.F15,
-			F16:  routeProto.F16,
-			F17:  routeProto.F17,
-			F18:  routeProto.F18,
-			F19:  routeProto.F19,
-			F20:  routeProto.F20,
-			F21:  routeProto.F21,
-			F22:  routeProto.F22,
-			F23:  routeProto.F23,
-			F24:  routeProto.F24,
-			F25:  routeProto.F25,
-			F26:  routeProto.F26,
-			F27:  routeProto.F27,
-			F28:  routeProto.F28,
-			F29:  routeProto.F29,
-			F30:  routeProto.F30,
-			F31:  routeProto.F31,
+		routes[route.Name] = &module.Route{
+			Name: route.Name,
+			F0:   route.F0,
+			F1:   route.F1,
+			F2:   route.F2,
+			F3:   route.F3,
+			F4:   route.F4,
+			F5:   route.F5,
+			F6:   route.F6,
+			F7:   route.F7,
+			F8:   route.F8,
+			F9:   route.F9,
+			F10:  route.F10,
+			F11:  route.F11,
+			F12:  route.F12,
+			F13:  route.F13,
+			F14:  route.F14,
+			F15:  route.F15,
+			F16:  route.F16,
+			F17:  route.F17,
+			F18:  route.F18,
+			F19:  route.F19,
+			F20:  route.F20,
+			F21:  route.F21,
+			F22:  route.F22,
+			F23:  route.F23,
+			F24:  route.F24,
+			F25:  route.F25,
+			F26:  route.F26,
+			F27:  route.F27,
+			F28:  route.F28,
+			F29:  route.F29,
+			F30:  route.F30,
+			F31:  route.F31,
 		}
 	}
 

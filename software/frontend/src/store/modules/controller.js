@@ -7,6 +7,7 @@ export const useControllerStore = defineStore('controller', () => {
     const id = ref("")
     const railwayModules = ref({})
     const locomotives = ref({})
+    const removeRoute = ref(null)
     const started = ref(false)
     const reboot = ref(false)
     const poweroff = ref(false)
@@ -87,6 +88,7 @@ export const useControllerStore = defineStore('controller', () => {
     }
 
     return {
+        removeRoute,
         railwayModules,
         isDisconnected,
         locomotives,

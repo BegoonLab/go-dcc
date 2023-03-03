@@ -1,6 +1,6 @@
 <template>
   <v-row class="px-3 py-2">
-    <v-col class="v-col-4">
+    <v-col cols="3">
       <v-text-field
           label="Address"
           v-model="locomotive.address"
@@ -9,16 +9,17 @@
           density="compact"
       ></v-text-field>
     </v-col>
-    <v-col class="v-col-4">
+    <v-col cols="6">
       <v-text-field
           label="Name"
           v-model="locomotive.name"
+          :hint="locomotive.name"
           variant="outlined"
           readonly
           density="compact"
       ></v-text-field>
     </v-col>
-    <v-col class="v-col-4">
+    <v-col cols="3">
       <v-text-field
           max="31"
           min="0"

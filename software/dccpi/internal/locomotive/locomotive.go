@@ -134,8 +134,12 @@ func (l *Locomotive) SendPackets() {
 	l.mux.Lock()
 	defer l.mux.Unlock()
 
-	l.speedPacket.Send()
-	l.flPacket.Send()
+	if l.speedPacket != nil {
+		l.speedPacket.Send()
+	}
+	if l.flPacket != nil {
+		l.flPacket.Send()
+	}
 	if l.sendGroupTwo {
 		l.fGroupTwoPacket0.Send()
 		l.fGroupTwoPacket1.Send()
