@@ -62,7 +62,7 @@ type Controller struct {
 }
 
 // NewController builds a Controller.
-func NewController(d Driver) *Controller {
+func NewController(d Driver, logger *zap.Logger) *Controller {
 	d.TracksOff()
 
 	return &Controller{
@@ -72,28 +72,71 @@ func NewController(d Driver) *Controller {
 		doneCh:         make(chan bool),
 		shutdownCh:     make(chan bool),
 		commandCh:      make(chan *packet.Packet, CommandMaxQueue),
+		Logger:         logger,
 	}
 }
 
 func (c *Controller) ToProto(id string) []byte {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-	locos := make(map[string]*controller.Locomotive, len(c.locomotives))
-	railwayModules := make(map[string]*controller.RailwayModule, len(c.railwayModules))
+	locos := make(map[string]*controller.Controller_Locomotive, len(c.locomotives))
+	railwayModules := make(map[string]*controller.Controller_RailwayModule, len(c.railwayModules))
+	routes := make(map[string]*controller.Controller_RailwayModule_Route)
 
 	for _, m := range c.railwayModules {
-		railwayModules[m.Name] = &controller.RailwayModule{
-			Name:    m.Name,
-			Address: uint32(m.Address),
-			Enabled: m.Enabled,
+
+		for _, route := range m.Routes {
+			routes[route.Name] = &controller.Controller_RailwayModule_Route{
+				Name: route.Name,
+				F0:   route.F0,
+				F1:   route.F1,
+				F2:   route.F2,
+				F3:   route.F3,
+				F4:   route.F4,
+				F5:   route.F5,
+				F6:   route.F6,
+				F7:   route.F7,
+				F8:   route.F8,
+				F9:   route.F9,
+				F10:  route.F10,
+				F11:  route.F11,
+				F12:  route.F12,
+				F13:  route.F13,
+				F14:  route.F14,
+				F15:  route.F15,
+				F16:  route.F16,
+				F17:  route.F17,
+				F18:  route.F18,
+				F19:  route.F19,
+				F20:  route.F20,
+				F21:  route.F21,
+				F22:  route.F22,
+				F23:  route.F23,
+				F24:  route.F24,
+				F25:  route.F25,
+				F26:  route.F26,
+				F27:  route.F27,
+				F28:  route.F28,
+				F29:  route.F29,
+				F30:  route.F30,
+				F31:  route.F31,
+			}
+		}
+
+		railwayModules[m.Name] = &controller.Controller_RailwayModule{
+			Name:        m.Name,
+			Address:     uint32(m.Address),
+			Enabled:     m.Enabled,
+			ActiveRoute: m.ActiveRoute,
+			Routes:      routes,
 		}
 	}
 	for _, l := range c.locomotives {
-		locos[l.Name] = &controller.Locomotive{
+		locos[l.Name] = &controller.Controller_Locomotive{
 			Name:      l.Name,
 			Address:   uint32(l.Address),
 			Speed:     uint32(l.Speed),
-			Direction: controller.Locomotive_Direction(l.Direction),
+			Direction: controller.Controller_Locomotive_Direction(l.Direction),
 			Enabled:   l.Enabled,
 			Fl:        l.Fl,
 			F1:        l.F1,
@@ -146,8 +189,8 @@ func (c *Controller) ToProto(id string) []byte {
 
 // NewControllerWithConfig builds a new Controller using the
 // given configuration.
-func NewControllerWithConfig(d Driver, cfg *config.Config) *Controller {
-	c := NewController(d)
+func NewControllerWithConfig(d Driver, cfg *config.Config, logger *zap.Logger) *Controller {
+	c := NewController(d, logger)
 
 	for _, loco := range cfg.Locomotives {
 		c.AddLoco(&locomotive.Locomotive{
@@ -156,15 +199,36 @@ func NewControllerWithConfig(d Driver, cfg *config.Config) *Controller {
 			Speed:     loco.Speed,
 			Direction: loco.Direction,
 			Fl:        loco.Fl,
+			Driver:    d,
 		})
 	}
 
 	for _, rm := range cfg.RailwayModules {
-		c.AddRailwayModule(&module.Railway{
+		// Prepare default routes
+		routes := make(map[string]*module.Route, 1)
+		routes["Custom"] = &module.Route{
+			Name: "Custom",
+		}
+		railwayModule := &module.Railway{
 			Name:    rm.Name,
 			Address: rm.Address,
 			Enabled: rm.Enabled,
-		})
+			RoutesData: module.RoutesData{
+				Routes:      routes,
+				ActiveRoute: "Custom",
+			},
+			Driver: d,
+		}
+
+		c.Logger.Info("Fetching railway module routes...", zap.String("name", rm.Name))
+		err := railwayModule.FetchRoutes()
+		if err != nil {
+			c.Logger.Error("Unable to fetch railway module routes. Defaults will be applied.", zap.Error(err), zap.String("name", rm.Name))
+		} else {
+			c.Logger.Info("Railway module routes has been fetched successfully!", zap.String("name", rm.Name))
+		}
+
+		c.AddRailwayModule(railwayModule)
 	}
 
 	return c
@@ -296,7 +360,15 @@ func (c *Controller) run() {
 						continue
 					}
 					for i := 0; i < CommandRepeat; i++ {
-						loco.SendPackets(c.driver)
+						loco.SendPackets()
+					}
+				}
+				for _, railwayModule := range c.railwayModules {
+					if !railwayModule.Enabled {
+						continue
+					}
+					for i := 0; i < CommandRepeat; i++ {
+						railwayModule.SendPackets()
 					}
 				}
 				idle.Send()
@@ -345,16 +417,13 @@ func (c *Controller) Handle(cProto *controller.Controller) error {
 		}
 	}
 
-	for _, railwayModule := range c.railwayModules {
-		railwayModuleProto, ok := cProto.RailwayModules[railwayModule.Name]
+	c.handleLocomotives(cProto)
+	c.handleRailwayModules(cProto)
 
-		if !ok {
-			continue
-		}
-		railwayModule.Enabled = railwayModuleProto.Enabled
+	return nil
+}
 
-	}
-
+func (c *Controller) handleLocomotives(cProto *controller.Controller) {
 	for _, loco := range c.locomotives {
 		lProto, ok := cProto.Locomotives[loco.Name]
 		if !ok {
@@ -395,6 +464,73 @@ func (c *Controller) Handle(cProto *controller.Controller) error {
 
 		loco.Apply()
 	}
+}
 
-	return nil
+func (c *Controller) handleRailwayModules(cProto *controller.Controller) {
+	for _, railwayModule := range c.railwayModules {
+		railwayModuleProto, ok := cProto.RailwayModules[railwayModule.Name]
+		if !ok {
+			continue
+		}
+		railwayModule.Enabled = railwayModuleProto.Enabled
+		railwayModule.Routes = c.handleRoutes(railwayModuleProto)
+		railwayModule.ActiveRoute = railwayModuleProto.ActiveRoute
+
+		railwayModule.Apply()
+		go func(railwayModule *module.Railway) {
+			err := railwayModule.PersistsRoutes()
+			if err != nil {
+				c.Logger.Error("Unable to persist railway module data", zap.Error(err))
+			}
+		}(railwayModule)
+	}
+}
+
+func (c *Controller) handleRoutes(railwayModuleProto *controller.Controller_RailwayModule) map[string]*module.Route {
+	routes := make(map[string]*module.Route)
+
+	for _, route := range railwayModuleProto.Routes {
+		routeProto, ok := railwayModuleProto.Routes[route.Name]
+
+		if !ok {
+			continue
+		}
+		routes[routeProto.Name] = &module.Route{
+			Name: routeProto.Name,
+			F0:   routeProto.F0,
+			F1:   routeProto.F1,
+			F2:   routeProto.F2,
+			F3:   routeProto.F3,
+			F4:   routeProto.F4,
+			F5:   routeProto.F5,
+			F6:   routeProto.F6,
+			F7:   routeProto.F7,
+			F8:   routeProto.F8,
+			F9:   routeProto.F9,
+			F10:  routeProto.F10,
+			F11:  routeProto.F11,
+			F12:  routeProto.F12,
+			F13:  routeProto.F13,
+			F14:  routeProto.F14,
+			F15:  routeProto.F15,
+			F16:  routeProto.F16,
+			F17:  routeProto.F17,
+			F18:  routeProto.F18,
+			F19:  routeProto.F19,
+			F20:  routeProto.F20,
+			F21:  routeProto.F21,
+			F22:  routeProto.F22,
+			F23:  routeProto.F23,
+			F24:  routeProto.F24,
+			F25:  routeProto.F25,
+			F26:  routeProto.F26,
+			F27:  routeProto.F27,
+			F28:  routeProto.F28,
+			F29:  routeProto.F29,
+			F30:  routeProto.F30,
+			F31:  routeProto.F31,
+		}
+	}
+
+	return routes
 }

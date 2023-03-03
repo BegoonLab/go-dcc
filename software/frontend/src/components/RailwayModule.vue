@@ -40,7 +40,9 @@
                   <v-row>
                     <v-col cols="8" class="my-2"><b>Custom</b></v-col>
                     <v-col cols="4">
-                      <v-btn color="amber-lighten-1"><v-icon>mdi-autorenew</v-icon></v-btn>
+                      <v-btn color="amber-lighten-1">
+                        <v-icon>mdi-autorenew</v-icon>
+                      </v-btn>
                     </v-col>
                   </v-row>
                 </template>
@@ -48,11 +50,13 @@
               <v-radio :value="`Custom${i}`" v-for="i in 10" :key="i" class="my-2">
                 <template v-slot:label>
                   <v-row>
-                    <v-col cols="8" class="my-2">Custom {{i}}</v-col>
+                    <v-col cols="8" class="my-2">Custom {{ i }}</v-col>
                     <v-col cols="4">
                       <v-btn color="red-darken-2"
-                      @click="confirmDeletionDialog = true"
-                      ><v-icon>mdi-trash-can-outline</v-icon></v-btn>
+                             @click="confirmDeletionDialog = true"
+                      >
+                        <v-icon>mdi-trash-can-outline</v-icon>
+                      </v-btn>
                     </v-col>
                   </v-row>
                 </template>
@@ -63,7 +67,7 @@
         <v-expansion-panel title="Left">
           <v-expansion-panel-text>
             <v-row>
-              <v-col cols="4" v-for="i in left" :key="i" >
+              <v-col cols="4" v-for="i in left" :key="i">
                 <v-switch
                     :label="`#${i}`"
                     :true-value="true"
@@ -79,7 +83,7 @@
         <v-expansion-panel title="Right">
           <v-expansion-panel-text>
             <v-row>
-              <v-col cols="4" v-for="i in right" :key="i" >
+              <v-col cols="4" v-for="i in right" :key="i">
                 <v-switch
                     :label="`#${i}`"
                     :true-value="true"
@@ -88,6 +92,25 @@
                     density="comfortable"
                     @change="(e) => update()"
                 ></v-switch>
+              </v-col>
+              <v-col cols="3" class="text-right">
+                <v-btn
+                    class="my-1"
+                    color="amber-lighten-1"
+                    @click="(e) => {reset()}"
+                >
+                  <v-icon>mdi-autorenew</v-icon>
+                </v-btn>
+              </v-col>
+              <v-col cols="5">
+                <v-btn
+                    class="my-1"
+                    color="success"
+                    @click="(e) => {saveAsDialog = true}"
+                >
+                  <v-icon>mdi-check-circle</v-icon>
+                  Save As...
+                </v-btn>
               </v-col>
             </v-row>
           </v-expansion-panel-text>
@@ -104,7 +127,10 @@
       <v-card-title class="text-h5">
         Are you sure?
       </v-card-title>
-      <v-card-text><b>Warning:</b> You are about to remove the route 'Main loop'. This action cannot be undone. Are you sure you want to proceed?</v-card-text>
+      <v-card-text>
+        <b>Warning:</b> You are about to remove the route 'Main loop'.
+        This action cannot be undone. Are you sure you want to proceed?
+      </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn
@@ -124,6 +150,42 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+  <v-dialog
+      v-model="saveAsDialog"
+      persistent
+      width="1024"
+  >
+    <v-card>
+      <v-card-title class="text-h5">
+        Save new route
+      </v-card-title>
+      <v-card-text>
+          <v-text-field
+              label="Route name*"
+              required
+          ></v-text-field>
+        <small>*indicates required field</small>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn
+            color="grey-darken-1"
+            variant="outlined"
+            @click="saveAsDialog = false"
+        >
+          Close
+        </v-btn>
+        <v-btn
+            color="success"
+            variant="outlined"
+            @click="saveAsDialog = false"
+        >
+          <v-icon>mdi-check-circle</v-icon>
+          Save
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script setup>
@@ -133,10 +195,22 @@ import {useControllerStore} from "../store/modules/controller";
 const props = defineProps(['name'])
 const panel = ref([0])
 const confirmDeletionDialog = ref(false)
-const left = ref([1,3,5,7,9,11,13,15])
-const right = ref([2,4,6,8,10,12,14,16])
+const saveAsDialog = ref(false)
+const left = ref([1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31])
+const right = ref([2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32])
 
 const store = useControllerStore()
 const railwayModule = computed(() => store.railwayModules[props.name])
 
+function reset() {
+
+}
+
+function saveAs() {
+
+}
+
+function update() {
+  store.sendDataToServer()
+}
 </script>

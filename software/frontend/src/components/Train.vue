@@ -56,7 +56,7 @@
                   ></v-radio>
                 </v-radio-group>
                 <v-switch
-                    :label="`Light: ${locomotive.fl === true ? 'On' : 'Off'}`"
+                    :label="`Headlights: ${locomotive.fl === true ? 'On' : 'Off'}`"
                     :true-value="true"
                     :false-value="false"
                     color="amber-lighten-1"

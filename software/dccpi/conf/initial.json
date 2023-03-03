@@ -2,15 +2,21 @@
   "railway_modules": [
     {
       "name": "Kyoto",
-      "address": 35
+      "address": 35,
+      "enabled": false,
+      "active_route": "Custom"
     },
     {
       "name": "Grand Central",
-      "address": 36
+      "address": 36,
+      "enabled": false,
+      "active_route": "Custom"
     },
     {
       "name": "Zurich",
-      "address": 37
+      "address": 37,
+      "enabled": false,
+      "active_route": "Custom"
     }
   ],
   "locomotives": [

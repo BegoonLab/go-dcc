@@ -15,18 +15,18 @@ import (
 func TestNewController(t *testing.T) {
 	cfg, err := config.LoadConfig("../../test/config.json")
 	assert.NoError(t, err)
-	c := NewControllerWithConfig(&dummy.DCCDummy{Log: zap.NewExample()}, cfg)
+	c := NewControllerWithConfig(&dummy.DCCDummy{Log: zap.NewExample()}, cfg, zap.NewExample())
 	c.Stop()
 }
 
 func TestAddLoco(t *testing.T) {
-	c := NewController(&dummy.DCCDummy{Log: zap.NewExample()})
+	c := NewController(&dummy.DCCDummy{Log: zap.NewExample()}, zap.NewExample())
 	assert.NotEmpty(t, c)
 	c.AddLoco(&locomotive.Locomotive{})
 }
 
 func TestRmLoco(t *testing.T) {
-	c := NewController(&dummy.DCCDummy{Log: zap.NewExample()})
+	c := NewController(&dummy.DCCDummy{Log: zap.NewExample()}, zap.NewExample())
 	c.AddLoco(&locomotive.Locomotive{Name: "abc"})
 	c.RmLoco(&locomotive.Locomotive{Name: "abc"})
 
@@ -36,7 +36,7 @@ func TestRmLoco(t *testing.T) {
 }
 
 func TestLocos(t *testing.T) {
-	c := NewController(&dummy.DCCDummy{Log: zap.NewExample()})
+	c := NewController(&dummy.DCCDummy{Log: zap.NewExample()}, zap.NewExample())
 	c.AddLoco(&locomotive.Locomotive{Name: "abc"})
 	l := c.Locos()
 	if len(l) != 1 || l[0].Name != "abc" {
@@ -46,7 +46,7 @@ func TestLocos(t *testing.T) {
 
 func TestCommand(t *testing.T) {
 	d := &dummy.DCCDummy{Log: zap.NewExample()}
-	c := NewController(d)
+	c := NewController(d, zap.NewExample())
 	assert.NotEmpty(t, c)
 	p := packet.NewBroadcastIdlePacket(d)
 	c.Command(p)
@@ -56,7 +56,7 @@ func TestCommand(t *testing.T) {
 }
 
 func TestStart(t *testing.T) {
-	c := NewController(&dummy.DCCDummy{Log: zap.NewExample()})
+	c := NewController(&dummy.DCCDummy{Log: zap.NewExample()}, zap.NewExample())
 	assert.NotEmpty(t, c)
 	c.Start()
 	time.Sleep(1 * time.Second) // nolint:forbidigo

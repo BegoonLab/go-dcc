@@ -3,10 +3,12 @@ package dummy
 import (
 	"testing"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 func TestGuessBuffer(t *testing.T) {
-	d := DCCDummy{}
+	d := DCCDummy{Log: zap.NewExample()}
 	d.TracksOn()
 	d.Low()
 	d.High()

@@ -98,9 +98,7 @@ func main() {
 		}
 	}
 
-	ctrl := controller.NewControllerWithConfig(dpi, cfg)
-	ctrl.Logger = l
-
+	ctrl := controller.NewControllerWithConfig(dpi, cfg, l)
 	r := &repl{
 		signalCh: make(chan os.Signal, 1),
 		doneCh:   make(chan struct{}),

@@ -14,3 +14,6 @@ lint-go:
 
 compile-protobuf-go:
 	protoc -I=./software/frontend/src/pb --go_out=./software/dccpi/internal/pb/build ./software/frontend/src/pb/controller.proto
+
+test:
+	cd ./software/dccpi && go test -race ./...
