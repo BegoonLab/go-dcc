@@ -38,7 +38,12 @@
   <v-row class="px-3">
     <v-col cols="12">
       <v-expansion-panels variant="accordion" color="deep-purple-lighten-2" v-model="panel">
-        <v-expansion-panel title="Train Motion">
+        <v-expansion-panel>
+          <template v-slot:title>
+            <v-icon>mdi-railroad-light</v-icon>
+            &nbsp;
+            Train Motion
+          </template>
           <v-expansion-panel-text>
             <v-row class="py-4">
               <v-col cols="8">
@@ -98,7 +103,12 @@
             </v-row>
           </v-expansion-panel-text>
         </v-expansion-panel>
-        <v-expansion-panel title="F0 ... F4">
+        <v-expansion-panel>
+          <template v-slot:title>
+            <v-icon>mdi-checkbox-multiple-marked-outline</v-icon>
+            &nbsp;
+            F0 ... F4
+          </template>
           <v-expansion-panel-text>
             <v-row>
               <v-col cols="4" v-for="i in 5" :key="i">
@@ -114,7 +124,12 @@
             </v-row>
           </v-expansion-panel-text>
         </v-expansion-panel>
-        <v-expansion-panel title="F5 ... F8">
+        <v-expansion-panel>
+          <template v-slot:title>
+            <v-icon>mdi-checkbox-multiple-marked-outline</v-icon>
+            &nbsp;
+            F5 ... F8
+          </template>
           <v-expansion-panel-text>
             <v-row>
               <v-col cols="4" v-for="i in 4" :key="i">
@@ -130,7 +145,12 @@
             </v-row>
           </v-expansion-panel-text>
         </v-expansion-panel>
-        <v-expansion-panel title="F9 ... F12">
+        <v-expansion-panel>
+          <template v-slot:title>
+            <v-icon>mdi-checkbox-multiple-marked-outline</v-icon>
+            &nbsp;
+            F9 ... F12
+          </template>
           <v-expansion-panel-text>
             <v-row>
               <v-col cols="4" v-for="i in 4" :key="i">
@@ -146,7 +166,12 @@
             </v-row>
           </v-expansion-panel-text>
         </v-expansion-panel>
-        <v-expansion-panel title="F13 ... F20">
+        <v-expansion-panel>
+          <template v-slot:title>
+            <v-icon>mdi-checkbox-multiple-marked-outline</v-icon>
+            &nbsp;
+            F13 ... F20
+          </template>
           <v-expansion-panel-text>
             <v-row>
               <v-col cols="4" v-for="i in 8" :key="i">
@@ -162,7 +187,12 @@
             </v-row>
           </v-expansion-panel-text>
         </v-expansion-panel>
-        <v-expansion-panel title="F21 ... F28">
+        <v-expansion-panel>
+          <template v-slot:title>
+            <v-icon>mdi-checkbox-multiple-marked-outline</v-icon>
+            &nbsp;
+            F21 ... F28
+          </template>
           <v-expansion-panel-text>
             <v-row>
               <v-col cols="4" v-for="i in 8" :key="i">

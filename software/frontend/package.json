@@ -2,10 +2,10 @@
     "name": "train-commander-ui",
     "version": "2.0.0",
     "description": "Train Commander UI",
-    "author": "Alexander Begoon <alexander.begoon@gmail.com>",
+    "author": "Alexander Begoon <alex@begoonlab.tech>",
     "scripts": {
         "dev": "cross-env NODE_ENV=development webpack-dev-server --progress --host=0.0.0.0",
-        "staging": "cross-env NODE_ENV=staging webpack",
+        "demo": "cross-env NODE_ENV=demo webpack",
         "build": "cross-env NODE_ENV=production webpack"
     },
     "dependencies": {
@@ -18,11 +18,16 @@
     "devDependencies": {
         "@babel/core": "^7.16.0",
         "@babel/preset-env": "^7.16.4",
+        "@fortawesome/fontawesome-free": "^6.3.0",
+        "@jamescoyle/vue-icon": "^0.1.2",
+        "@mdi/font": "^7.1.96",
+        "@mdi/js": "^7.1.96",
         "@vue/compiler-sfc": "^3.2.47",
         "babel-loader": "^9.1.2",
         "css-loader": "^6.5.1",
         "deepmerge": "^4.2.2",
         "html-webpack-plugin": "^5.5.0",
+        "material-design-icons-iconfont": "^6.7.0",
         "pinia": "^2.0.30",
         "protobufjs": "^7.2.2",
         "protobufjs-loader": "^2.0.2",

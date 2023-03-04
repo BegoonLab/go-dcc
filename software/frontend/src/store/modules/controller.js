@@ -56,6 +56,7 @@ export const useControllerStore = defineStore('controller', () => {
         started.value = true;
         const wsStore = useWsStore()
         wsStore.sendMessage(getState())
+
     }
 
     function stopAll() {
@@ -85,6 +86,7 @@ export const useControllerStore = defineStore('controller', () => {
 
     function setDisconnected() {
         connected.value = false;
+        window.navigator.vibrate(500);
     }
 
     return {

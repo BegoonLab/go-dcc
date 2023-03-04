@@ -2,7 +2,7 @@ const path = require('path');
 const {VueLoaderPlugin} = require('vue-loader');
 const webpack = require('webpack');
 const {VuetifyPlugin} = require('webpack-plugin-vuetify')
-
+const pkg = require('./package.json')
 
 // Plugins
 let webpackPlugins = [
@@ -10,20 +10,32 @@ let webpackPlugins = [
     new webpack.HotModuleReplacementPlugin(),
     new webpack.NoEmitOnErrorsPlugin(),
     new VuetifyPlugin({autoImport: true}), // Enabled by default
+    new webpack.EnvironmentPlugin(['NODE_ENV']),
+    new webpack.DefinePlugin({
+        __VERSION__: JSON.stringify(pkg.version),
+        __BUILT__: JSON.stringify(new Date()),
+        __AUTHOR__: JSON.stringify(pkg.author)
+    })
 ];
 // Entry points
 let webpackEntryPoints = [
     './src/index.js',
 ];
 
-if (process.env.NODE_ENV === 'production') {
-
+if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'demo') {
     webpackPlugins = [
         new VueLoaderPlugin(),
         new VuetifyPlugin({autoImport: true}), // Enabled by default
+        new webpack.EnvironmentPlugin(['NODE_ENV']),
+        new webpack.DefinePlugin({
+            __VERSION__: JSON.stringify(pkg.version),
+            __BUILT__: JSON.stringify(new Date()),
+            __AUTHOR__: JSON.stringify(pkg.author)
+        })
     ];
+}
 
-} else {
+if (process.env.NODE_ENV === 'development') {
     // Development
     webpackEntryPoints.push('webpack-hot-middleware/client');
 }
@@ -45,7 +57,7 @@ module.exports = {
         hot: true
     },
     output: {
-        filename: '[name].bundle.js',
+        filename: process.env.NODE_ENV === 'demo' ? 'demo.[name].bundle.js' : '[name].bundle.js',
         path: path.resolve('../build'),
     },
     module: {
@@ -60,11 +72,6 @@ module.exports = {
                     'css-loader',
                     {
                         loader: 'sass-loader',
-                        // Requires sass-loader@^7.0.0
-                        options: {
-                            implementation: require('sass'),
-                            indentedSyntax: true // optional
-                        },
                         // Requires >= sass-loader@^8.0.0
                         options: {
                             implementation: require('sass'),

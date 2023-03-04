@@ -35,9 +35,9 @@
       <v-expansion-panels variant="accordion" color="deep-purple-lighten-2" v-model="panel">
         <v-expansion-panel>
           <template v-slot:title>
-            <v-icon>mdi-arrow-decision-outline</v-icon>
+            <v-icon>mdi-source-branch</v-icon>
             &nbsp;
-            Routes of {{railwayModule.name}}
+            Routes of {{ railwayModule.name }}
           </template>
           <v-expansion-panel-text>
             <v-radio-group v-model="railwayModule.activeRoute" @change="(e) => update()">
@@ -46,7 +46,7 @@
                   <v-row>
                     <v-col cols="8" class="my-2"><b>Custom</b></v-col>
                     <v-col cols="4">
-                      <v-btn color="amber-lighten-1">
+                      <v-btn color="amber-lighten-1" @click="reset()">
                         <v-icon>mdi-autorenew</v-icon>
                       </v-btn>
                     </v-col>
@@ -80,7 +80,7 @@
             <v-icon v-if="!isCustomActiveRoute">mdi-lock</v-icon>
             <v-icon v-if="isCustomActiveRoute">mdi-lock-open-variant-outline</v-icon>
             &nbsp;
-            Left railroad switches
+            Left railway turnouts
           </template>
           <v-expansion-panel-text>
             <v-row>
@@ -89,7 +89,7 @@
                     v-if="!isCustomActiveRoute"
                     activator="parent"
                     location="top"
-                >Use `Custom` to adjust the railway switch
+                >Use `Custom` to adjust the railway turnout
                 </v-tooltip>
                 <v-switch
                     v-if="isCustomActiveRoute"
@@ -110,7 +110,7 @@
                     density="comfortable"
                 ></v-switch>
               </v-col>
-              <v-col v-if="isCustomActiveRoute" cols="3" class="text-right">
+              <v-col v-if="isCustomActiveRoute" cols="12" class="text-right">
                 <v-btn
                     class="my-1"
                     color="amber-lighten-1"
@@ -118,8 +118,7 @@
                 >
                   <v-icon>mdi-autorenew</v-icon>
                 </v-btn>
-              </v-col>
-              <v-col v-if="isCustomActiveRoute" cols="5">
+                &nbsp;
                 <v-btn
                     class="my-1"
                     color="success"
@@ -137,7 +136,7 @@
             <v-icon v-if="!isCustomActiveRoute">mdi-lock</v-icon>
             <v-icon v-if="isCustomActiveRoute">mdi-lock-open-variant-outline</v-icon>
             &nbsp;
-            Right railroad switches
+            Right railway turnouts
           </template>
           <v-expansion-panel-text>
             <v-row>
@@ -146,7 +145,7 @@
                     v-if="!isCustomActiveRoute"
                     activator="parent"
                     location="top"
-                >Use `Custom` to adjust the railway switch
+                >Use `Custom` to adjust the railway turnout
                 </v-tooltip>
                 <v-switch
                     v-if="isCustomActiveRoute"
@@ -167,7 +166,7 @@
                     density="comfortable"
                 ></v-switch>
               </v-col>
-              <v-col v-if="isCustomActiveRoute" cols="3" class="text-right">
+              <v-col v-if="isCustomActiveRoute" cols="12" class="text-right">
                 <v-btn
                     class="my-1"
                     color="amber-lighten-1"
@@ -175,8 +174,7 @@
                 >
                   <v-icon>mdi-autorenew</v-icon>
                 </v-btn>
-              </v-col>
-              <v-col v-if="isCustomActiveRoute" cols="5">
+                &nbsp;
                 <v-btn
                     class="my-1"
                     color="success"
@@ -304,6 +302,7 @@ function reset() {
   for (let i = 0; i <= 32; i++) {
     railwayModule.value.routes["Custom"][`f${i}`] = false
   }
+  update()
 }
 
 function saveAs() {
@@ -313,6 +312,7 @@ function saveAs() {
   for (let i = 0; i <= 32; i++) {
     railwayModule.value.routes[newRoute.value.name][`f${i}`] = railwayModule.value.routes["Custom"][`f${i}`]
   }
+  update()
 }
 
 function getOrderedRoutes(unordered) {

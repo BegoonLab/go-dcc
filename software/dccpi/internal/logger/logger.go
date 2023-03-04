@@ -10,7 +10,7 @@ import (
 func NewLogger() (*zap.Logger, error) {
 	cfg := zap.NewProductionConfig()
 	cfg.OutputPaths = []string{
-		"dccpi.log",
+		"./dccpi.log",
 	}
 	cfg.EncoderConfig.EncodeTime = zapcore.TimeEncoderOfLayout(time.RFC1123)
 

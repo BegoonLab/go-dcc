@@ -26,6 +26,7 @@ services:
     working_dir: /var/app
     volumes:
       - ./software/dccpi:/var/app:delegated
+      - ./software/frontend:/var/frontend:delegated
     healthcheck:
       test: curl --fail http://localhost:3000/check || exit 1
       interval: 10s

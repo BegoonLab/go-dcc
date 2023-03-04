@@ -18,8 +18,8 @@
         <v-icon>mdi-wifi-alert</v-icon>
         Connection lost.
         <br>
-        Please check your WiFi connection and try again.
         <br>
+        Please check your Wi-Fi connection and try again.
         <br>
         <br>
         Alternatively, you can reload the page to reconnect.
@@ -156,12 +156,38 @@
                   </v-row>
                 </template>
               </v-list-item>
+              <v-list-subheader>THEME</v-list-subheader>
+              <v-list-item density="compact" key="theme">
+                <template v-slot:title>
+                  <v-row>
+                    <v-col cols="2" class="my-2">
+                      <v-icon v-if="theme.global.current.value.dark" icon="mdi-weather-night"></v-icon>
+                      <v-icon v-if="!theme.global.current.value.dark" icon="mdi-weather-sunny"></v-icon>
+                    </v-col>
+                    <v-col cols="6" class="my-2">
+                      {{theme.global.current.value.dark ? 'Dark':'Light'}} theme
+                    </v-col>
+                    <v-col cols="4" class="mr-0">
+                      <v-switch
+                          density="compact"
+                          color="yellow-lighten-1"
+                          v-model="lightThemeOn"
+                          @change="(e) => {toggleTheme()}"
+                      ></v-switch>
+                    </v-col>
+                  </v-row>
+                </template>
+              </v-list-item>
               <v-list-subheader>SYSTEM MANAGER</v-list-subheader>
               <v-list-item density="compact" @click="reboot" append-icon="mdi-restart">
                 <v-list-item-title>Reboot</v-list-item-title>
               </v-list-item>
               <v-list-item density="compact" @click="poweroff" append-icon="mdi-power">
                 <v-list-item-title>Shutdown</v-list-item-title>
+              </v-list-item>
+              <v-list-subheader>INFO</v-list-subheader>
+              <v-list-item density="compact" @click="showInfo" append-icon="mdi-information-outline">
+                <v-list-item-title>Show info</v-list-item-title>
               </v-list-item>
             </v-list>
           </v-navigation-drawer>
@@ -189,12 +215,46 @@
         </v-container>
       </v-sheet>
     </v-card>
+    <v-dialog
+        v-model="infoDialog"
+        persistent
+        width="auto"
+    >
+      <v-card>
+        <v-card-title class="text-h5">
+          <v-icon>mdi-information-outline</v-icon>
+          Info
+        </v-card-title>
+        <v-card-text>
+          <b>Version: </b> {{ version }}
+          <br>
+          <br>
+          <b>Built at: </b> {{ builtAt }}
+          <br>
+          <br>
+          <b>Author: </b> {{ author }}
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+              color="grey-darken-1"
+              variant="outlined"
+              @click="infoDialog = false"
+          >
+            OK
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-footer bottom padless>
       <v-container fluid class="px-0 py-10">
         <v-row>
           <v-col>
             <span class="creds">Created and Designed by:</span>
-            <v-img class="mx-auto" max-width="300" width="60%" contain src="begoon-lab-logo.png"></v-img>
+            <a href="https://begoonlab.tech" target="_blank">
+              <v-img v-if="lightThemeOn" class="mx-auto" max-width="300" width="60%" contain src="begoon-lab-logo.png"></v-img>
+              <v-img v-if="!lightThemeOn" class="mx-auto" max-width="300" width="60%" contain src="begoon-lab-logo-dark-theme.png"></v-img>
+            </a>
           </v-col>
         </v-row>
       </v-container>
@@ -208,7 +268,9 @@ import {onMounted, ref} from "vue";
 import {storeToRefs} from "pinia";
 import {useControllerStore} from "../store/modules/controller";
 import {useWsStore} from "../store/modules/ws";
+import { useTheme } from 'vuetify';
 
+const theme = useTheme()
 const controller = useControllerStore()
 const ws = useWsStore()
 const {
@@ -222,10 +284,23 @@ const {
 
 onMounted(() => {
   ws.connectToWebsocket();
+  lightThemeOn.value = localStorage.getItem("train_commander_theme") !== 'dark';
+  theme.global.name.value = localStorage.getItem("train_commander_theme") === 'dark' ? 'dark' : 'light'
 })
 
+const version = __VERSION__
+const builtAt = __BUILT__
+const author = __AUTHOR__
 const tab = ref(null)
 const drawer = ref(false)
+const infoDialog = ref(false)
+const lightThemeOn = ref(false)
+
+function toggleTheme() {
+  theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'
+  lightThemeOn.value = theme.global.name.value === 'light'
+  localStorage.setItem("train_commander_theme", theme.global.name.value)
+}
 
 function reloadPage() {
   window.location.reload()
@@ -245,6 +320,10 @@ function poweroff() {
 
 function update() {
   controller.sendDataToServer()
+}
+
+function showInfo() {
+  infoDialog.value = true;
 }
 
 function ordered(unordered) {

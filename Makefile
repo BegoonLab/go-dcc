@@ -2,6 +2,7 @@ dev:
 	docker compose up server vue-ui
 build-ui:
 	docker compose run vue-ui npm run build
+	docker compose run vue-ui npm run demo
 build-server:
 	cd ./software/dccpi/cmd && go build ./main.go
 	sudo chown root ./software/dccpi/cmd/main
