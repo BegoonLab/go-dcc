@@ -40,8 +40,7 @@
       <v-expansion-panels variant="accordion" color="deep-purple-lighten-2" v-model="panel">
         <v-expansion-panel>
           <template v-slot:title>
-            <v-icon>mdi-railroad-light</v-icon>
-            &nbsp;
+            <v-icon class="mr-2">mdi-railroad-light</v-icon>
             Train Motion
           </template>
           <v-expansion-panel-text>
@@ -105,8 +104,7 @@
         </v-expansion-panel>
         <v-expansion-panel>
           <template v-slot:title>
-            <v-icon>mdi-checkbox-multiple-marked-outline</v-icon>
-            &nbsp;
+            <v-icon class="mr-2">mdi-checkbox-multiple-marked-outline</v-icon>
             F0 ... F4
           </template>
           <v-expansion-panel-text>
@@ -126,8 +124,7 @@
         </v-expansion-panel>
         <v-expansion-panel>
           <template v-slot:title>
-            <v-icon>mdi-checkbox-multiple-marked-outline</v-icon>
-            &nbsp;
+            <v-icon class="mr-2">mdi-checkbox-multiple-marked-outline</v-icon>
             F5 ... F8
           </template>
           <v-expansion-panel-text>
@@ -147,8 +144,7 @@
         </v-expansion-panel>
         <v-expansion-panel>
           <template v-slot:title>
-            <v-icon>mdi-checkbox-multiple-marked-outline</v-icon>
-            &nbsp;
+            <v-icon class="mr-2">mdi-checkbox-multiple-marked-outline</v-icon>
             F9 ... F12
           </template>
           <v-expansion-panel-text>
@@ -168,8 +164,7 @@
         </v-expansion-panel>
         <v-expansion-panel>
           <template v-slot:title>
-            <v-icon>mdi-checkbox-multiple-marked-outline</v-icon>
-            &nbsp;
+            <v-icon class="mr-2">mdi-checkbox-multiple-marked-outline</v-icon>
             F13 ... F20
           </template>
           <v-expansion-panel-text>
@@ -189,8 +184,7 @@
         </v-expansion-panel>
         <v-expansion-panel>
           <template v-slot:title>
-            <v-icon>mdi-checkbox-multiple-marked-outline</v-icon>
-            &nbsp;
+            <v-icon class="mr-2">mdi-checkbox-multiple-marked-outline</v-icon>
             F21 ... F28
           </template>
           <v-expansion-panel-text>

@@ -205,7 +205,7 @@
                       color="success"
                       @click="() => (drawer = true)"
                   >
-                    <v-icon>mdi-tram</v-icon>&nbsp;&nbsp;Activate locomotives
+                    <v-icon>mdi-tram</v-icon>Activate locomotives
                   </v-btn>
                 </v-col>
               </v-row>
