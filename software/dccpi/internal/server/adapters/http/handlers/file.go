@@ -21,6 +21,6 @@ func NewFileHandler(logger *zap.Logger) *FileHandler {
 func (h *FileHandler) ServeFiles(w http.ResponseWriter, r *http.Request) {
 	rctx := chi.RouteContext(r.Context())
 	pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*")
-	fs := http.StripPrefix(pathPrefix, http.FileServer(http.Dir("./../frontend/public")))
+	fs := http.StripPrefix(pathPrefix, http.FileServer(http.Dir("./../../frontend/public")))
 	fs.ServeHTTP(w, r)
 }
