@@ -5,7 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alexbegoon/go-dcc/software/dccpi/internal/driver/dummy"
+	"go.uber.org/zap"
+
+	"github.com/alexbegoon/go-dcc/internal/driver/dummy"
 )
 
 func TestSend(t *testing.T) {
@@ -13,7 +15,7 @@ func TestSend(t *testing.T) {
 		// This facilitates that tests pass on travis :(
 		dummy.ByteOneMax = 94 * time.Microsecond
 	}
-	d := &dummy.DCCDummy{}
+	d := &dummy.DCCDummy{Log: zap.NewExample()}
 	p := NewBroadcastIdlePacket(d)
 	d.TracksOn()
 	p.Send()

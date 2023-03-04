@@ -1,0 +1,9 @@
+[submodule "software/railway_module/firmware/firmware/lib/NmraDcc"]
+	path = software/railway_module/firmware/firmware/lib/NmraDcc
+	url = https://github.com/mrrwa/NmraDcc
+[submodule "software/railway_module/firmware/firmware/lib/PCA9685-Arduino"]
+	path = software/railway_module/firmware/firmware/lib/PCA9685-Arduino
+	url = https://github.com/NachtRaveVL/PCA9685-Arduino
+[submodule "software/railway_module/firmware/firmware/lib/led"]
+	path = software/railway_module/firmware/firmware/lib/led
+	url = https://github.com/ArduinoGetStarted/led

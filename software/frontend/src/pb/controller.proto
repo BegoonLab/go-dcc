@@ -1,0 +1,99 @@
+// controller.proto
+syntax = "proto3";
+package controller;
+option go_package = "go/controller";
+
+message Controller {
+  map <string, Locomotive> locomotives = 1;
+  map <string, RailwayModule> railway_modules = 2;
+  bool started = 3;
+  bool reboot = 4;
+  bool poweroff = 5;
+  string id = 6;
+
+  message Locomotive {
+    string name = 1;
+    uint32 address = 2;
+    uint32 speed = 3;
+    Direction direction = 4;
+    bool enabled = 5;
+    bool fl = 6;
+    bool f1 = 7;
+    bool f2 = 8;
+    bool f3 = 9;
+    bool f4 = 10;
+    bool f5 = 11;
+    bool f6 = 12;
+    bool f7 = 13;
+    bool f8 = 14;
+    bool f9 = 15;
+    bool f10 = 16;
+    bool f11 = 17;
+    bool f12 = 18;
+    bool f13 = 19;
+    bool f14 = 20;
+    bool f15 = 21;
+    bool f16 = 22;
+    bool f17 = 23;
+    bool f18 = 24;
+    bool f19 = 25;
+    bool f20 = 26;
+    bool f21 = 27;
+    bool f22 = 28;
+    bool f23 = 29;
+    bool f24 = 30;
+    bool f25 = 31;
+    bool f26 = 32;
+    bool f27 = 33;
+    bool f28 = 34;
+
+    enum Direction {
+      Backward = 0;
+      Forward = 1;
+    }
+  }
+
+  message RailwayModule {
+    string name = 1;
+    uint32 address = 2;
+    bool enabled = 3;
+    map <string, Route> routes = 4;
+    string activeRoute = 5;
+
+    message Route {
+      string name = 1;
+      bool f0 = 2;
+      bool f1 = 3;
+      bool f2 = 4;
+      bool f3 = 5;
+      bool f4 = 6;
+      bool f5 = 7;
+      bool f6 = 8;
+      bool f7 = 9;
+      bool f8 = 10;
+      bool f9 = 11;
+      bool f10 = 12;
+      bool f11 = 13;
+      bool f12 = 14;
+      bool f13 = 15;
+      bool f14 = 16;
+      bool f15 = 17;
+      bool f16 = 18;
+      bool f17 = 19;
+      bool f18 = 20;
+      bool f19 = 21;
+      bool f20 = 22;
+      bool f21 = 23;
+      bool f22 = 24;
+      bool f23 = 25;
+      bool f24 = 26;
+      bool f25 = 27;
+      bool f26 = 28;
+      bool f27 = 29;
+      bool f28 = 30;
+      bool f29 = 31;
+      bool f30 = 32;
+      bool f31 = 33;
+    }
+  }
+}

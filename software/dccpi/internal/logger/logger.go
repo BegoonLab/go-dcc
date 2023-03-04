@@ -1,12 +1,18 @@
 package logger
 
-import "go.uber.org/zap"
+import (
+	"time"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+)
 
 func NewLogger() (*zap.Logger, error) {
 	cfg := zap.NewProductionConfig()
 	cfg.OutputPaths = []string{
-		"../storage/dccpi.log",
+		"./dccpi.log",
 	}
+	cfg.EncoderConfig.EncodeTime = zapcore.TimeEncoderOfLayout(time.RFC1123)
 
 	return cfg.Build()
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/alexbegoon/go-dcc/software/dccpi/internal/packet"
+	"github.com/alexbegoon/go-dcc/internal/packet"
 )
 
 // Direction constants.
@@ -78,6 +78,8 @@ type Locomotive struct {
 
 	mux sync.Mutex
 
+	Driver Driver
+
 	speedPacket *packet.Packet
 	flPacket    *packet.Packet
 
@@ -128,49 +130,26 @@ func (l *Locomotive) String() string {
 		f4)
 }
 
-func (l *Locomotive) SendPackets(d Driver) {
+func (l *Locomotive) SendPackets() {
 	l.mux.Lock()
-	{
-		if !l.sendGroupTwo {
-			l.sendGroupTwo = l.F5 || l.F6 || l.F7 || l.F8 || l.F9 || l.F10 || l.F11 || l.F12
-		}
-		if !l.sendExpansion0 {
-			l.sendExpansion0 = l.F13 || l.F14 || l.F15 || l.F16 || l.F17 || l.F18 || l.F19 || l.F20
-		}
-		if !l.sendExpansion1 {
-			l.sendExpansion1 = l.F21 || l.F22 || l.F23 || l.F24 || l.F25 || l.F26 || l.F27 || l.F28
-		}
-		if l.speedPacket == nil {
-			l.speedPacket = packet.NewSpeedAndDirectionPacket(d,
-				l.Address, l.Speed, byte(l.Direction))
-		}
-		if l.flPacket == nil {
-			l.flPacket = packet.NewFunctionGroupOnePacket(d,
-				l.Address, l.Fl, l.F1, l.F2, l.F3, l.F4)
-		}
-		if l.fGroupTwoPacket0 == nil {
-			l.fGroupTwoPacket0, l.fGroupTwoPacket1 = packet.NewFunctionGroupTwoPacket(d,
-				l.Address, l.F5, l.F6, l.F7, l.F8, l.F9, l.F10, l.F11, l.F12)
-		}
-		if l.fExpansionPacket0 == nil {
-			l.fExpansionPacket0, l.fExpansionPacket1 = packet.NewFunctionExpansionPacket(d,
-				l.Address, l.F13, l.F14, l.F15, l.F16, l.F17, l.F18, l.F19, l.F20,
-				l.F21, l.F22, l.F23, l.F24, l.F25, l.F26, l.F27, l.F28)
-		}
+	defer l.mux.Unlock()
+
+	if l.speedPacket != nil {
 		l.speedPacket.Send()
-		l.flPacket.Send()
-		if l.sendGroupTwo {
-			l.fGroupTwoPacket0.Send()
-			l.fGroupTwoPacket1.Send()
-		}
-		if l.sendExpansion0 {
-			l.fExpansionPacket0.Send()
-		}
-		if l.sendExpansion1 {
-			l.fExpansionPacket1.Send()
-		}
 	}
-	l.mux.Unlock()
+	if l.flPacket != nil {
+		l.flPacket.Send()
+	}
+	if l.sendGroupTwo {
+		l.fGroupTwoPacket0.Send()
+		l.fGroupTwoPacket1.Send()
+	}
+	if l.sendExpansion0 {
+		l.fExpansionPacket0.Send()
+	}
+	if l.sendExpansion1 {
+		l.fExpansionPacket1.Send()
+	}
 }
 
 // Apply makes any changes to the Locomotive's properties
@@ -178,13 +157,35 @@ func (l *Locomotive) SendPackets(d Driver) {
 // therefore, alter the behavior of the device on the tracks.
 func (l *Locomotive) Apply() {
 	l.mux.Lock()
-	{
-		l.speedPacket = nil
-		l.flPacket = nil
-		l.fGroupTwoPacket0 = nil
-		l.fGroupTwoPacket1 = nil
-		l.fExpansionPacket0 = nil
-		l.fExpansionPacket1 = nil
+	defer l.mux.Unlock()
+
+	l.speedPacket = nil
+	l.flPacket = nil
+	l.fGroupTwoPacket0 = nil
+	l.fGroupTwoPacket1 = nil
+	l.fExpansionPacket0 = nil
+	l.fExpansionPacket1 = nil
+
+	if !l.sendGroupTwo {
+		l.sendGroupTwo = l.F5 || l.F6 || l.F7 || l.F8 || l.F9 || l.F10 || l.F11 || l.F12
 	}
-	l.mux.Unlock()
+	if !l.sendExpansion0 {
+		l.sendExpansion0 = l.F13 || l.F14 || l.F15 || l.F16 || l.F17 || l.F18 || l.F19 || l.F20
+	}
+	if !l.sendExpansion1 {
+		l.sendExpansion1 = l.F21 || l.F22 || l.F23 || l.F24 || l.F25 || l.F26 || l.F27 || l.F28
+	}
+	if l.speedPacket == nil {
+		l.speedPacket = packet.NewSpeedAndDirectionPacket(l.Driver,
+			l.Address, l.Speed, byte(l.Direction))
+	}
+	if l.flPacket == nil {
+		l.flPacket = packet.NewFunctionGroupOnePacket(l.Driver, l.Address, l.Fl, l.F1, l.F2, l.F3, l.F4)
+	}
+	if l.fGroupTwoPacket0 == nil {
+		l.fGroupTwoPacket0, l.fGroupTwoPacket1 = packet.NewFunctionGroupTwoPacket(l.Driver, l.Address, l.F5, l.F6, l.F7, l.F8, l.F9, l.F10, l.F11, l.F12)
+	}
+	if l.fExpansionPacket0 == nil {
+		l.fExpansionPacket0, l.fExpansionPacket1 = packet.NewFunctionExpansionPacket(l.Driver, l.Address, l.F13, l.F14, l.F15, l.F16, l.F17, l.F18, l.F19, l.F20, l.F21, l.F22, l.F23, l.F24, l.F25, l.F26, l.F27, l.F28)
+	}
 }

@@ -27,7 +27,15 @@
             "f18": false,
             "f19": false,
             "f20": false,
-            "f21": false
+            "f21": false,
+            "f22": false,
+            "f23": false,
+            "f24": false,
+            "f25": false,
+            "f26": false,
+            "f27": false,
+            "f28": false,
+            "Driver": null
         },
         {
             "name": "Loco2",
@@ -56,7 +64,15 @@
             "f18": false,
             "f19": false,
             "f20": false,
-            "f21": false
+            "f21": false,
+            "f22": false,
+            "f23": false,
+            "f24": false,
+            "f25": false,
+            "f26": false,
+            "f27": false,
+            "f28": false,
+            "Driver": null
         },
         {
             "name": "loco3",
@@ -85,7 +101,16 @@
             "f18": false,
             "f19": false,
             "f20": false,
-            "f21": false
+            "f21": false,
+            "f22": false,
+            "f23": false,
+            "f24": false,
+            "f25": false,
+            "f26": false,
+            "f27": false,
+            "f28": false,
+            "Driver": null
         }
-    ]
+    ],
+    "railway_modules": null
 }

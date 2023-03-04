@@ -7,21 +7,19 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
-	"github.com/alexbegoon/go-dcc/software/dccpi/internal/config"
-	"github.com/alexbegoon/go-dcc/software/dccpi/internal/controller"
-	"github.com/alexbegoon/go-dcc/software/dccpi/internal/driver/dccpi"
-	"github.com/alexbegoon/go-dcc/software/dccpi/internal/driver/dummy"
-	"github.com/alexbegoon/go-dcc/software/dccpi/internal/logger"
-	"github.com/alexbegoon/go-dcc/software/dccpi/internal/server"
+	"github.com/alexbegoon/go-dcc/internal/config"
+	"github.com/alexbegoon/go-dcc/internal/controller"
+	"github.com/alexbegoon/go-dcc/internal/driver/dccpi"
+	"github.com/alexbegoon/go-dcc/internal/driver/dummy"
+	"github.com/alexbegoon/go-dcc/internal/logger"
+	"github.com/alexbegoon/go-dcc/internal/server/adapters/http"
 	"github.com/stianeikeland/go-rpio/v4"
 	"go.uber.org/zap"
 )
@@ -61,13 +59,11 @@ type repl struct {
 }
 
 func init() {
-	//usr, _ := user.Current()
-	//DefaultConfigPath = filepath.Join(usr.HomeDir, ".dccpi")
+	// DefaultConfigPath = filepath.Join(usr.HomeDir, ".dccpi")
 	flag.Usage = func() {
 		fmt.Fprint(os.Stdout, "Usage: dccpi [options]")
 		fmt.Fprint(os.Stdout, "Options:")
 		flag.PrintDefaults()
-
 	}
 
 	flag.StringVar(&configFlag, "config", DefaultConfigPath,
@@ -84,9 +80,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("can't initialize zap logger: %v", err)
 	}
+	l.Info("Initializing...")
 	cfg, err := config.LoadConfig(configFlag)
 	if err != nil {
-		l.Error("Cannot load configuration. Using empty one.")
+		l.Error("Cannot load configuration. Using empty one.", zap.Error(err))
 		cfg = &config.Config{}
 	}
 
@@ -96,14 +93,13 @@ func main() {
 	var dpi Driver
 	dpi, err = dccpi.NewDCCPi()
 	if err != nil {
-		l.Error("DCCPi is not available. Using dummy driver.")
+		l.Error("DCCPi is not available. Using dummy driver.", zap.Error(err))
 		dpi = &dummy.DCCDummy{
 			Log: l,
 		}
 	}
 
-	ctrl := controller.NewControllerWithConfig(dpi, cfg)
-
+	ctrl := controller.NewControllerWithConfig(dpi, cfg, l)
 	r := &repl{
 		signalCh: make(chan os.Signal, 1),
 		doneCh:   make(chan struct{}),
@@ -112,25 +108,18 @@ func main() {
 		log:      l,
 	}
 
-	signal.Notify(r.signalCh, os.Interrupt, syscall.SIGTERM, syscall.SIGSTOP)
+	signal.Notify(r.signalCh, os.Interrupt, syscall.SIGTERM)
+
+	r.ctrl.Start()
+	s := http.New(l, ctrl)
+
+	s.Serve()
 
 	go func() {
 		<-r.signalCh
+		s.GracefulStop()
 		r.shutdown()
 	}()
-
-	r.ctrl.Start()
-	s := server.Serve(r.ctrl)
-
-	defer func(logger *zap.Logger) {
-		ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second) // nolint:gomnd
-		logger.Error(err.Error())
-		err = s.Shutdown(ctx)
-		logger.Error("Unable to shutdown server", zap.Error(err))
-		_ = logger.Sync()
-		cancel()
-		os.Exit(0)
-	}(l)
 
 	<-r.doneCh
 }
