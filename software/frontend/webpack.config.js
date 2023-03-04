@@ -60,9 +60,6 @@ module.exports = {
         filename: process.env.NODE_ENV === 'demo' ? 'demo.[name].bundle.js' : '[name].bundle.js',
         path: path.resolve('../build'),
     },
-    optimization: {
-        minimize: process.env.NODE_ENV !== 'demo',
-    },
     module: {
         rules: [
             {
