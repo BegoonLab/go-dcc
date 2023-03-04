@@ -16,7 +16,6 @@ import * as directives from 'vuetify/directives'
 import {aliases, mdi} from 'vuetify/iconsets/mdi'
 import {fa} from 'vuetify/iconsets/fa'
 import {md} from 'vuetify/iconsets/md'
-import {mdiAccount} from '@mdi/js'
 
 const vuetify = createVuetify({
     components,
@@ -25,7 +24,6 @@ const vuetify = createVuetify({
         defaultSet: 'mdi',
         aliases: {
             ...aliases,
-            account: mdiAccount,
         },
         sets: {
             md,
