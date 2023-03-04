@@ -1,10 +1,7 @@
 /*
    Created by △ BegoonLab
-
    @author Alexander Begoon <alex@begoonlab.tech>
-
    Firmware for Railway Module version 1.0
-
    2023
 */
 #include <Arduino.h>
@@ -15,8 +12,7 @@
 //////// CONFIGURATION ///////////
 
 //#define Two_PWM_Controllers
-//#define This_Decoder_Address 35
-#define This_Decoder_Address 10
+#define This_Decoder_Address 35
 #define PWM_Frequency 50
 // Define the Arduino input Pin number for the DCC Signal
 #define DCC_PIN     2
@@ -27,6 +23,46 @@
 //#define DEBUG_DCC_FUNC
 // Uncomment to print all DCC Packets
 //#define NOTIFY_DCC_MSG
+
+// Fine-tuning for the PWM ports
+struct pwmPortConf {
+    uint16_t on;
+    uint16_t off;
+};
+pwmPortConf pwmConf[32] = {
+        {200, 220}, // Port 0
+        {200, 300}, // Port 1
+        {200, 300}, // Port 2
+        {200, 300}, // Port 3
+        {200, 300}, // Port 4
+        {200, 300}, // Port 5
+        {200, 300}, // Port 6
+        {200, 300}, // Port 7
+        {200, 300}, // Port 8
+        {200, 300}, // Port 9
+        {200, 300}, // Port 10
+        {200, 300}, // Port 11
+        {200, 300}, // Port 12
+        {200, 300}, // Port 13
+        {200, 300}, // Port 14
+        {200, 300}, // Port 15
+        {200, 300}, // Port 16
+        {200, 300}, // Port 17
+        {200, 300}, // Port 18
+        {200, 300}, // Port 19
+        {200, 300}, // Port 20
+        {200, 300}, // Port 21
+        {200, 300}, // Port 22
+        {200, 300}, // Port 23
+        {200, 300}, // Port 24
+        {200, 300}, // Port 25
+        {200, 300}, // Port 26
+        {200, 300}, // Port 27
+        {200, 300}, // Port 28
+        {200, 300}, // Port 29
+        {200, 300}, // Port 30
+        {200, 300}, // Port 31
+};
 
 //////// END OF CONFIGURATION ///////////
 
@@ -41,32 +77,31 @@ NmraDcc Dcc;
 DCC_MSG Packet;
 ezLED led(13);  // Status LED
 
-struct CVPair
-{
-    uint16_t  CV;
-    uint8_t   Value;
+struct CVPair {
+    uint16_t CV;
+    uint8_t Value;
 };
 
-CVPair FactoryDefaultCVs [] =
+CVPair FactoryDefaultCVs[] =
         {
                 // The CV Below defines the Short DCC Address
-                {CV_MULTIFUNCTION_PRIMARY_ADDRESS, This_Decoder_Address&0x7F},
+                {CV_MULTIFUNCTION_PRIMARY_ADDRESS,      This_Decoder_Address & 0x7F},
 
                 // These two CVs define the Long DCC Address
-                {CV_MULTIFUNCTION_EXTENDED_ADDRESS_MSB, ((This_Decoder_Address>>8)&0x7F)+192},
-                {CV_MULTIFUNCTION_EXTENDED_ADDRESS_LSB, This_Decoder_Address&0xFF},
+                {CV_MULTIFUNCTION_EXTENDED_ADDRESS_MSB, ((This_Decoder_Address >> 8) & 0x7F) + 192},
+                {CV_MULTIFUNCTION_EXTENDED_ADDRESS_LSB, This_Decoder_Address & 0xFF},
 
 // ONLY uncomment 1 CV_29_CONFIG line below as appropriate
 //  {CV_29_CONFIG,                                      0}, // Short Address 14 Speed Steps
-                {CV_29_CONFIG,                       CV29_F0_LOCATION}, // Short Address 28/128 Speed Steps
+                {CV_29_CONFIG,                          CV29_F0_LOCATION}, // Short Address 28/128 Speed Steps
 //  {CV_29_CONFIG, CV29_EXT_ADDRESSING | CV29_F0_LOCATION}, // Long  Address 28/128 Speed Steps
         };
-uint8_t FactoryDefaultCVIndex = sizeof(FactoryDefaultCVs)/sizeof(CVPair);
-void notifyCVResetFactoryDefault()
-{
+uint8_t FactoryDefaultCVIndex = sizeof(FactoryDefaultCVs) / sizeof(CVPair);
+
+void notifyCVResetFactoryDefault() {
     // Make FactoryDefaultCVIndex non-zero and equal to num CV's to be reset
     // to flag to the loop() function that a reset to Factory Defaults needs to be done
-    FactoryDefaultCVIndex = sizeof(FactoryDefaultCVs)/sizeof(CVPair);
+    FactoryDefaultCVIndex = sizeof(FactoryDefaultCVs) / sizeof(CVPair);
 };
 
 ////////////////// SETUP ////////////////////
@@ -75,7 +110,7 @@ void setup() {
     digitalWrite(3, HIGH); // Disable PWM Drivers
 
     Serial.begin(115200);
-    //Wire.begin();
+    Wire.begin();
 
     Serial.println("Setup...");
 
@@ -117,7 +152,7 @@ void setup() {
 #else
     Dcc.pin(0, DCC_PIN, 1);
 #endif
-    Dcc.init( MAN_ID_DIY, 100, FLAGS_MY_ADDRESS_ONLY, 0 ); // Enable DCC Receiver
+    Dcc.init(MAN_ID_DIY, 100, FLAGS_MY_ADDRESS_ONLY, 0); // Enable DCC Receiver
     Serial.println("DCC initiated");
     led.blinkNumberOfTimes(250, 750, 10);
 }
@@ -128,37 +163,36 @@ void loop() {
     // You MUST call the NmraDcc.process() method frequently from the Arduino loop() function for correct library operation
     Dcc.process();
 
-    if( FactoryDefaultCVIndex && Dcc.isSetCVReady())
-    {
+    if (FactoryDefaultCVIndex && Dcc.isSetCVReady()) {
         FactoryDefaultCVIndex--; // Decrement first as initially it is the size of the array
-        Dcc.setCV( FactoryDefaultCVs[FactoryDefaultCVIndex].CV, FactoryDefaultCVs[FactoryDefaultCVIndex].Value);
+        Dcc.setCV(FactoryDefaultCVs[FactoryDefaultCVIndex].CV, FactoryDefaultCVs[FactoryDefaultCVIndex].Value);
     }
 
     // MUST call the led.loop() function in loop()
     led.loop();
 }
 
-void setPWMController1 (int channel, bool value) {
+void setPWMController1(int channel, bool value) {
     if (value) {
-        pwmController1.setChannelPWM(channel, 200);
+        pwmController1.setChannelPWM(channel, pwmConf[channel].on);
     } else {
-        pwmController1.setChannelPWM(channel, 350);
+        pwmController1.setChannelPWM(channel, pwmConf[channel].off);
     }
 }
 
 #ifdef Two_PWM_Controllers
 void setPWMController2 (int channel, bool value) {
-  if (value == true) {
-    pwmController2.setChannelPWM(channel, 200);
+  if (value) {
+    pwmController2.setChannelPWM(channel, pwmConf[channel].on);
   } else {
-    pwmController2.setChannelPWM(channel, 350);
+    pwmController2.setChannelPWM(channel, pwmConf[channel].on);
   }
 }
 #endif
 
 #ifdef  NOTIFY_DCC_FUNC
-void notifyDccFunc(uint16_t Addr, DCC_ADDR_TYPE AddrType, FN_GROUP FuncGrp, uint8_t FuncState)
-{
+
+void notifyDccFunc(uint16_t Addr, DCC_ADDR_TYPE AddrType, FN_GROUP FuncGrp, uint8_t FuncState) {
     led.blinkNumberOfTimes(15, 15, 1);
 #ifdef DEBUG_DCC_FUNC
     Serial.print("notifyDccFunc: Addr: ");
@@ -167,8 +201,7 @@ void notifyDccFunc(uint16_t Addr, DCC_ADDR_TYPE AddrType, FN_GROUP FuncGrp, uint
   Serial.print("  Function Group: ");
   Serial.print(FuncGrp,DEC);
 #endif
-    switch( FuncGrp )
-    {
+    switch (FuncGrp) {
 #ifdef NMRA_DCC_ENABLE_14_SPEED_STEP_MODE
         case FN_0:
 #ifdef DEBUG_DCC_FUNC
@@ -179,13 +212,14 @@ void notifyDccFunc(uint16_t Addr, DCC_ADDR_TYPE AddrType, FN_GROUP FuncGrp, uint
        break;
 #endif
         case FN_0_4:
-            if(Dcc.getCV(CV_29_CONFIG) & CV29_F0_LOCATION) // Only process Function 0 in this packet if we're not in Speed Step 14 Mode
+            if (Dcc.getCV(CV_29_CONFIG) &
+                CV29_F0_LOCATION) // Only process Function 0 in this packet if we're not in Speed Step 14 Mode
             {
 #ifdef DEBUG_DCC_FUNC
                 Serial.print(" FN 0: ");
          Serial.print((FuncState & FN_BIT_00) ? "1  ": "0  ");
 #endif
-                setPWMController1(0 , FuncState & FN_BIT_00);
+                setPWMController1(0, FuncState & FN_BIT_00);
             }
 #ifdef DEBUG_DCC_FUNC
             Serial.print(" FN 1-4: ");
@@ -194,10 +228,10 @@ void notifyDccFunc(uint16_t Addr, DCC_ADDR_TYPE AddrType, FN_GROUP FuncGrp, uint
        Serial.print((FuncState & FN_BIT_03) ? "1  ": "0  ");
        Serial.println((FuncState & FN_BIT_04) ? "1  ": "0  ");
 #endif
-            setPWMController1(1 , FuncState & FN_BIT_01);
-            setPWMController1(2 , FuncState & FN_BIT_02);
-            setPWMController1(3 , FuncState & FN_BIT_03);
-            setPWMController1(4 , FuncState & FN_BIT_04);
+            setPWMController1(1, FuncState & FN_BIT_01);
+            setPWMController1(2, FuncState & FN_BIT_02);
+            setPWMController1(3, FuncState & FN_BIT_03);
+            setPWMController1(4, FuncState & FN_BIT_04);
             break;
 
         case FN_5_8:
@@ -208,10 +242,10 @@ void notifyDccFunc(uint16_t Addr, DCC_ADDR_TYPE AddrType, FN_GROUP FuncGrp, uint
        Serial.print((FuncState & FN_BIT_07) ? "1  ": "0  ");
        Serial.println((FuncState & FN_BIT_08) ? "1  ": "0  ");
 #endif
-            setPWMController1(5 , FuncState & FN_BIT_05);
-            setPWMController1(6 , FuncState & FN_BIT_06);
-            setPWMController1(7 , FuncState & FN_BIT_07);
-            setPWMController1(8 , FuncState & FN_BIT_08);
+            setPWMController1(5, FuncState & FN_BIT_05);
+            setPWMController1(6, FuncState & FN_BIT_06);
+            setPWMController1(7, FuncState & FN_BIT_07);
+            setPWMController1(8, FuncState & FN_BIT_08);
             break;
 
         case FN_9_12:
@@ -222,10 +256,10 @@ void notifyDccFunc(uint16_t Addr, DCC_ADDR_TYPE AddrType, FN_GROUP FuncGrp, uint
        Serial.print((FuncState & FN_BIT_11) ? "1  ": "0  ");
        Serial.println((FuncState & FN_BIT_12) ? "1  ": "0  ");
 #endif
-            setPWMController1(9 , FuncState & FN_BIT_09);
-            setPWMController1(10 , FuncState & FN_BIT_10);
-            setPWMController1(11 , FuncState & FN_BIT_11);
-            setPWMController1(12 , FuncState & FN_BIT_12);
+            setPWMController1(9, FuncState & FN_BIT_09);
+            setPWMController1(10, FuncState & FN_BIT_10);
+            setPWMController1(11, FuncState & FN_BIT_11);
+            setPWMController1(12, FuncState & FN_BIT_12);
             break;
 
         case FN_13_20:
@@ -240,9 +274,9 @@ void notifyDccFunc(uint16_t Addr, DCC_ADDR_TYPE AddrType, FN_GROUP FuncGrp, uint
        Serial.print((FuncState & FN_BIT_19) ? "1  ": "0  ");
        Serial.println((FuncState & FN_BIT_20) ? "1  ": "0  ");
 #endif
-            setPWMController1(13 , FuncState & FN_BIT_13);
-            setPWMController1(14 , FuncState & FN_BIT_14);
-            setPWMController1(15 , FuncState & FN_BIT_15);
+            setPWMController1(13, FuncState & FN_BIT_13);
+            setPWMController1(14, FuncState & FN_BIT_14);
+            setPWMController1(15, FuncState & FN_BIT_15);
 #ifdef Two_PWM_Controllers
             setPWMController2( 0 , FuncState & FN_BIT_16);
        setPWMController2( 1 , FuncState & FN_BIT_17);
@@ -277,8 +311,8 @@ void notifyDccFunc(uint16_t Addr, DCC_ADDR_TYPE AddrType, FN_GROUP FuncGrp, uint
             break;
     }
 }
-#endif
 
+#endif
 
 
 #ifdef  NOTIFY_DCC_MSG
