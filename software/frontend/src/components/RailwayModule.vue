@@ -35,8 +35,7 @@
       <v-expansion-panels variant="accordion" color="deep-purple-lighten-2" v-model="panel">
         <v-expansion-panel>
           <template v-slot:title>
-            <v-icon>mdi-source-branch</v-icon>
-            &nbsp;
+            <v-icon class="mr-2">mdi-source-branch</v-icon>
             Routes of {{ railwayModule.name }}
           </template>
           <v-expansion-panel-text>
@@ -77,9 +76,9 @@
         </v-expansion-panel>
         <v-expansion-panel>
           <template v-slot:title>
-            <v-icon v-if="!isCustomActiveRoute">mdi-lock</v-icon>
-            <v-icon v-if="isCustomActiveRoute">mdi-lock-open-variant-outline</v-icon>
-            &nbsp;
+            <v-icon class="mr-2" v-if="!isCustomActiveRoute">mdi-lock</v-icon>
+            <v-icon class="mr-2" v-if="isCustomActiveRoute">mdi-lock-open-variant-outline</v-icon>
+
             Left railway turnouts
           </template>
           <v-expansion-panel-text>
@@ -118,7 +117,7 @@
                 >
                   <v-icon>mdi-autorenew</v-icon>
                 </v-btn>
-                &nbsp;
+
                 <v-btn
                     class="my-1"
                     color="success"
@@ -133,9 +132,9 @@
         </v-expansion-panel>
         <v-expansion-panel>
           <template v-slot:title>
-            <v-icon v-if="!isCustomActiveRoute">mdi-lock</v-icon>
-            <v-icon v-if="isCustomActiveRoute">mdi-lock-open-variant-outline</v-icon>
-            &nbsp;
+            <v-icon class="mr-2" v-if="!isCustomActiveRoute">mdi-lock</v-icon>
+            <v-icon class="mr-2" v-if="isCustomActiveRoute">mdi-lock-open-variant-outline</v-icon>
+
             Right railway turnouts
           </template>
           <v-expansion-panel-text>
@@ -174,7 +173,7 @@
                 >
                   <v-icon>mdi-autorenew</v-icon>
                 </v-btn>
-                &nbsp;
+
                 <v-btn
                     class="my-1"
                     color="success"
