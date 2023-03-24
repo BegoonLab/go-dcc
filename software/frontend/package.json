@@ -1,6 +1,6 @@
 {
     "name": "train-commander-ui",
-    "version": "2.0.1",
+    "version": "2.0.2",
     "description": "Train Commander UI",
     "author": "Alexander Begoon <alex@begoonlab.tech>",
     "scripts": {

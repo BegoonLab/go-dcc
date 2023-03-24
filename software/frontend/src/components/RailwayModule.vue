@@ -142,6 +142,13 @@ function deleteRoute() {
   confirmDeletionDialog.value = false
 }
 
+function reset() {
+  for (let i = 0; i <= 32; i++) {
+    railwayModule.value.routes["Custom"][`f${i}`] = false
+  }
+  update()
+}
+
 function getOrderedRoutes(unordered) {
   return Object.keys(unordered).sort().reduce(
       (obj, key) => {
