@@ -34,6 +34,7 @@ software/frontend/node_modules/*
 /.idea/sshConfigs.xml
 /.idea/vcs.xml
 /.idea/webServers.xml
+/.idea/watcherTasks.xml
 
 /vendor
 /software/dccpi/storage/*.log
@@ -43,3 +44,4 @@ software/frontend/node_modules/*
 /software/dccpi/tmp
 software/dccpi/cmd/main
 hardware/kicad/railway_module_v1.0/railway-backups
+/software/railway_module/firmware/firmware/.idea/

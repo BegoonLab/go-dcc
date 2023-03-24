@@ -3,6 +3,7 @@ import {createPinia} from 'pinia'
 import App from './components/App.vue'
 import Train from './components/Train.vue'
 import RailwayModule from './components/RailwayModule.vue'
+import RailwayTurnouts from "./components/RailwayTurnouts.vue";
 
 // Vuetify
 import '@mdi/font/css/materialdesignicons.css'
@@ -44,5 +45,6 @@ app.use(pinia)
 
 app.component('train', Train)
 app.component('railway-module', RailwayModule)
+app.component('railway-turnouts', RailwayTurnouts)
 
 app.mount('#app')
