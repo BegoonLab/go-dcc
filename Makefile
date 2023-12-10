@@ -4,7 +4,7 @@ build-ui:
 	docker compose run vue-ui npm run build
 	docker compose run vue-ui npm run demo
 build-server:
-	cd ./software/dccpi/cmd && CGO_CFLAGS="-arch arm64" CGO_LDFLAGS="-arch arm64" go build ./main.go
+	cd ./software/dccpi/cmd && CGO_ENABLED=0 GOOS=linux go build ./main.go
 	sudo chown root ./software/dccpi/cmd/main
 	sudo chmod +s ./software/dccpi/cmd/main
 bash:
