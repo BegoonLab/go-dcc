@@ -37,7 +37,7 @@
 
   <v-row class="px-3">
     <v-col cols="12">
-      <v-expansion-panels variant="accordion" color="deep-purple-lighten-2" v-model="panel">
+      <v-expansion-panels multiple="true" mandatory="false" variant="accordion" color="deep-purple-lighten-2" v-model="panel">
         <v-expansion-panel>
           <template v-slot:title>
             <v-icon class="mr-2">mdi-railroad-light</v-icon>
@@ -226,6 +226,11 @@ const targetSpeed = ref(0)
 const panel = ref([0])
 
 function update() {
+  // Ensure that the first panel is always open
+  if (!panel.value.includes(0)) {
+    panel.value.push(0);
+  }
+
   store.sendDataToServer()
 }
 

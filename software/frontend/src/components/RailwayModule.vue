@@ -32,7 +32,7 @@
   </v-row>
   <v-row class="px-3">
     <v-col cols="12">
-      <v-expansion-panels variant="accordion" color="deep-purple-lighten-2" v-model="panel">
+      <v-expansion-panels multiple="true" variant="accordion" color="deep-purple-lighten-2" v-model="panel">
         <v-expansion-panel>
           <template v-slot:title>
             <v-icon class="mr-2">mdi-source-branch</v-icon>
@@ -42,14 +42,16 @@
             <v-radio-group v-model="railwayModule.activeRoute" @change="(e) => update()">
               <v-radio value="Custom" class="my-2">
                 <template v-slot:label>
-                  <v-row>
-                    <v-col cols="8" class="my-2"><b>Custom</b></v-col>
-                    <v-col cols="4">
-                      <v-btn color="amber-lighten-1" @click="reset()">
-                        <v-icon>mdi-autorenew</v-icon>
-                      </v-btn>
-                    </v-col>
-                  </v-row>
+                  <v-container>
+                    <v-row>
+                      <v-col cols="8" class="my-2"><b>Custom</b></v-col>
+                      <v-col cols="4">
+                        <v-btn color="amber-lighten-1" @click="reset()">
+                          <v-icon>mdi-autorenew</v-icon>
+                        </v-btn>
+                      </v-col>
+                    </v-row>
+                  </v-container>
                 </template>
               </v-radio>
               <v-radio
@@ -59,16 +61,18 @@
                   class="my-2"
               >
                 <template v-slot:label>
-                  <v-row>
-                    <v-col cols="8" class="my-2">{{ item.name }}</v-col>
-                    <v-col cols="4">
-                      <v-btn color="red-darken-2"
-                             @click="() => {confirmDeletionDialog = true; routeToDelete = item.name}"
-                      >
-                        <v-icon>mdi-trash-can-outline</v-icon>
-                      </v-btn>
-                    </v-col>
-                  </v-row>
+                  <v-container>
+                    <v-row>
+                      <v-col cols="8" class="my-2">{{ item.name }}</v-col>
+                      <v-col cols="4">
+                        <v-btn color="red-darken-2"
+                               @click="() => {confirmDeletionDialog = true; routeToDelete = item.name}"
+                        >
+                          <v-icon>mdi-trash-can-outline</v-icon>
+                        </v-btn>
+                      </v-col>
+                    </v-row>
+                  </v-container>
                 </template>
               </v-radio>
             </v-radio-group>
